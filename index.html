@@ -9,7 +9,7 @@
     font-family: system-ui, Arial, sans-serif;
     margin: 8px;
     background: #f5f7fa;
-    padding-bottom: 180px; /* space so content isn't hidden behind fixed keypad */
+    padding-bottom: 180px;
   }
   h1 { font-size: 1.25rem; margin: 0 0 10px 0; }
   .controls, .bottom-controls { margin-bottom: 12px; }
@@ -70,10 +70,12 @@
     border-radius: 3px;
     box-sizing: border-box;
     -webkit-appearance: none;
+    background: transparent;
   }
   .emoji { font-size: 1.2rem; margin-left: 4px; }
   .correct { background: #d4edda !important; color: #155724; }
   .incorrect { background: #f8d7da !important; color: #721c24; }
+  .focused-row { background: #fff9c4 !important; } /* soft yellow */
   #message { margin-top: 10px; font-size: 1rem; line-height: 1.5; }
   .rating { font-weight: 600; }
   #historyTable { font-size: 0.9rem; }
@@ -338,6 +340,16 @@ function clearHistory() {
   }
 }
 
+function highlightRow(input) {
+  // Remove highlight from all rows
+  document.querySelectorAll('.focused-row').forEach(row => row.classList.remove('focused-row'));
+  // Highlight the parent row
+  if (input) {
+    const row = input.closest('tr');
+    if (row) row.classList.add('focused-row');
+  }
+}
+
 function startQuiz() {
   clearInterval(timerInterval);
   messageEl.textContent = '';
@@ -373,10 +385,13 @@ function startQuiz() {
   updateTimer();
 
   setButtonsEnabled(false, true);
+
+  // Auto-focus first problem and highlight its row
   const firstInput = document.querySelector('input.answer');
   if (firstInput) {
     firstInput.focus();
     activeInput = firstInput;
+    highlightRow(firstInput);
   }
 }
 
@@ -405,6 +420,7 @@ function finishQuiz() {
     const correct = answers[idx];
 
     input.disabled = true;
+    row.classList.remove('focused-row');
 
     if (userVal !== '' && Number(userVal) === correct) {
       input.classList.add('correct');
@@ -447,11 +463,12 @@ function finishQuiz() {
   setButtonsEnabled(true, false);
 }
 
-// Track focused input
+// Track focused input and highlight entire row
 tbody.addEventListener('focusin', (e) => {
   if (e.target.classList.contains('answer') && !e.target.disabled) {
     activeInput = e.target;
     e.target.value = '';
+    highlightRow(e.target);
   }
 });
 
