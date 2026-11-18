@@ -177,30 +177,35 @@ function randomInt(min, max) {
 }
 
 function generateUniqueProblems(max, isDivision) {
-  const used = new Set();
-  const problems = [];
-  while (problems.length < TOTAL) {
-    const a = randomInt(MIN, max);
-    const b = randomInt(MIN, max);
-    const product = a * b;
-    let key, display, answer;
-
-    if (isDivision) {
-      key = `${product}÷${a}`;
-      display = `${product} ÷ ${a}`;
-      answer = b;
-    } else {
-      key = `${a}×${b}`;
-      display = `${a} × ${b}`;
-      answer = product;
-    }
-
-    if (!used.has(key)) {
-      used.add(key);
-      problems.push({ display, answer });
+  // Build full list of possible unique problems first (avoids infinite loop)
+  const all = [];
+  for (let a = MIN; a <= max; a++) {
+    for (let b = MIN; b <= max; b++) {
+      const product = a * b;
+      if (isDivision) {
+        all.push({
+          display: `${product} ÷ ${a}`,
+          answer: b,
+          key: `${product}÷${a}`
+        });
+      } else {
+        all.push({
+          display: `${a} × ${b}`,
+          answer: product,
+          key: `${a}×${b}`
+        });
+      }
     }
   }
-  return problems;
+
+  // Shuffle
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+
+  // Take up to TOTAL (or all if fewer exist)
+  return all.slice(0, TOTAL);
 }
 
 function formatTime(totalSeconds) {
@@ -320,21 +325,28 @@ function startQuiz() {
   const uniqueProblems = generateUniqueProblems(max, isDivision);
   const rows = tbody.querySelectorAll('tr');
 
+  // Only fill as many rows as we have unique problems
+  const count = Math.min(uniqueProblems.length, TOTAL);
   rows.forEach((row, idx) => {
-    const { display, answer } = uniqueProblems[idx];
-    answers.push(answer);
+    if (idx < count) {
+      const { display, answer } = uniqueProblems[idx];
+      answers.push(answer);
 
-    const problemCell = row.querySelector('.problem');
-    problemCell.textContent = display;
+      const problemCell = row.querySelector('.problem');
+      problemCell.textContent = display;
 
-    const input = row.querySelector('input.answer');
-    const emojiSpan = row.querySelector('.emoji');
-    input.value = '';
-    input.disabled = false;
-    input.classList.remove('correct', 'incorrect');
-    input.style.background = '';
-    input.style.color = '';
-    emojiSpan.textContent = '';
+      const input = row.querySelector('input.answer');
+      const emojiSpan = row.querySelector('.emoji');
+      input.value = '';
+      input.disabled = false;
+      input.classList.remove('correct', 'incorrect');
+      input.style.background = '';
+      input.style.color = '';
+      emojiSpan.textContent = '';
+    } else {
+      // Hide extra rows if fewer than 25 unique problems
+      row.style.display = 'none';
+    }
   });
 
   startTime = performance.now();
@@ -342,7 +354,8 @@ function startQuiz() {
   updateTimer();
 
   setButtonsEnabled(false, true);
-  document.querySelector('input.answer').focus();
+  const firstInput = document.querySelector('input.answer:not([disabled])');
+  if (firstInput) firstInput.focus();
 }
 
 function updateTimer() {
@@ -354,7 +367,7 @@ function updateTimer() {
 function finishQuiz() {
   clearInterval(timerInterval);
   const totalSeconds = (performance.now() - startTime) / 1000;
-  const avgSeconds = totalSeconds / TOTAL;
+  const avgSeconds = totalSeconds / answers.length || 1;
   const timeStr = formatTime(totalSeconds);
 
   timerEl.textContent = `Time: ${timeStr}`;
@@ -363,6 +376,7 @@ function finishQuiz() {
   const rows = tbody.querySelectorAll('tr');
 
   rows.forEach((row, idx) => {
+    if (idx >= answers.length) return;
     const input = row.querySelector('input.answer');
     const emojiSpan = row.querySelector('.emoji');
     const userVal = input.value.trim();
@@ -380,7 +394,7 @@ function finishQuiz() {
     }
   });
 
-  const percentage = Math.round((correctCount / TOTAL) * 100);
+  const percentage = Math.round((correctCount / answers.length) * 100);
   const childName = nameInput.value.trim() || "Student";
   const speedRating = getSpeedRating(avgSeconds);
   const accuracyRating = getAccuracyRating(percentage);
@@ -390,7 +404,7 @@ function finishQuiz() {
 
   messageEl.innerHTML = `
     <div><strong>${childName}</strong>'s Results</div>
-    <div>Score: <strong>${correctCount}/${TOTAL} (${percentage}%)</strong> ${scoreEmoji}</div>
+    <div>Score: <strong>${correctCount}/${answers.length} (${percentage}%)</strong> ${scoreEmoji}</div>
     <div>Total time: <strong>${timeStr}</strong></div>
     <div>Average time: <strong>${avgSeconds.toFixed(1)} seconds</strong> per problem ${timeEmoji}</div>
     <div class="rating">Speed: ${speedRating}</div>
@@ -410,6 +424,9 @@ function finishQuiz() {
   renderHistory();
 
   setButtonsEnabled(true, false);
+
+  // Restore all rows for next quiz
+  rows.forEach(row => row.style.display = '');
 }
 
 // Auto-clear answer boxes on focus
