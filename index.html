@@ -75,7 +75,7 @@
   .emoji { font-size: 1.2rem; margin-left: 4px; }
   .correct { background: #d4edda !important; color: #155724; }
   .incorrect { background: #f8d7da !important; color: #721c24; }
-  .focused-row { background: #fff9c4 !important; } /* soft yellow */
+  .focused-row { background: #fff9c4 !important; }
   #message { margin-top: 10px; font-size: 1rem; line-height: 1.5; }
   .rating { font-weight: 600; }
   #historyTable { font-size: 0.9rem; }
@@ -122,7 +122,7 @@
     justify-content: center;
   }
   .key:active { background: #e0e0e0; }
-  .key.wide { max-width: 140px; font-size: 1.4rem; }
+  .key.wide { max-width: none; flex: 1; font-size: 1.3rem; }
 </style>
 </head>
 <body>
@@ -176,6 +176,7 @@
   </div>
   <div class="keypad-row">
     <div class="key wide" id="backspaceKey">⌫</div>
+    <div class="key wide" id="enterKey">Enter</div>
   </div>
 </div>
 
@@ -341,12 +342,24 @@ function clearHistory() {
 }
 
 function highlightRow(input) {
-  // Remove highlight from all rows
   document.querySelectorAll('.focused-row').forEach(row => row.classList.remove('focused-row'));
-  // Highlight the parent row
   if (input) {
     const row = input.closest('tr');
     if (row) row.classList.add('focused-row');
+  }
+}
+
+function advanceToNextEmpty() {
+  const inputs = Array.from(document.querySelectorAll('input.answer:not([disabled])'));
+  const emptyInput = inputs.find(input => input.value.trim() === '');
+
+  if (emptyInput) {
+    emptyInput.focus();
+    activeInput = emptyInput;
+    highlightRow(emptyInput);
+  } else {
+    // No empty answers left → treat as Done
+    finishQuiz();
   }
 }
 
@@ -386,7 +399,6 @@ function startQuiz() {
 
   setButtonsEnabled(false, true);
 
-  // Auto-focus first problem and highlight its row
   const firstInput = document.querySelector('input.answer');
   if (firstInput) {
     firstInput.focus();
@@ -479,6 +491,8 @@ keypad.addEventListener('click', (e) => {
 
   if (key.id === 'backspaceKey') {
     activeInput.value = activeInput.value.slice(0, -1);
+  } else if (key.id === 'enterKey') {
+    advanceToNextEmpty();
   } else if (key.dataset.digit) {
     activeInput.value += key.dataset.digit;
   }
