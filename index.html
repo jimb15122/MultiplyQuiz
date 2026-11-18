@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Multiplication Practice – 25 Problems</title>
+<style>
+  body {
+    font-family: system-ui, Arial, sans-serif;
+    margin: 8px;
+    background: #f5f7fa;
+  }
+  h1 { font-size: 1.25rem; margin: 0 0 10px 0; }
+  .controls, .bottom-controls { margin-bottom: 12px; }
+  .bottom-controls { margin-top: 16px; }
+  button {
+    padding: 8px 14px;
+    font-size: 1rem;
+    margin-right: 6px;
+    cursor: pointer();
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+  }
+  button:hover { background: #eee; }
+  #timer {
+    display: inline-block;
+    margin-left: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .name-box { margin-bottom: 12px; }
+  .name-box label { font-weight: 600; margin-right: 8px; }
+  .name-box input {
+    padding: 6px 8px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 180px;
+    max-width: 100%;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 100%;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    table-layout: fixed;
+    margin-bottom: 16px;
+  }
+  th, td {
+    border: 1px solid #d0d7de;
+    padding: 4px 3px;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 0.95rem;
+  }
+  th { background: #f0f3f6; font-weight: 600; }
+  .problem { font-weight: 600; }
+  input[type="number"] {
+    width: 100%;
+    max-width: 70px;
+    padding: 2px 1px;
+    text-align: center;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    box-sizing: border-box;
+  }
+  .correct { background: #d4edda !important; color: #155724; }
+  .incorrect { background: #f8d7da !important; color: #721c24; }
+  #message { margin-top: 10px; font-size: 1rem; line-height: 1.5; }
+  .rating { font-weight: 600; }
+  #historyTable { font-size: 0.9rem; }
+  #historyTable th, #historyTable td { 
+    padding: 6px 2px; 
+    font-size: 0.85rem;
+  }
+  .clear-history { margin-top: 8px; font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<h1>25 Random Multiplication Problems</h1>
+
+<div class="name-box">
+  <label for="childName">Child's Name:</label>
+  <input type="text" id="childName" placeholder="Enter name">
+</div>
+
+<div class="controls">
+  <button id="startBtn">Start</button>
+  <button id="doneBtn" disabled>Done</button>
+  <span id="timer">Time: 0:00</span>
+</div>
+
+<table id="quizTable">
+  <thead>
+    <tr>
+      <th style="width: 10%;">#</th>
+      <th style="width: 40%;">Problem</th>
+      <th style="width: 50%;">Your Answer</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<div class="bottom-controls">
+  <button id="startBtnBottom">Start</button>
+  <button id="doneBtnBottom" disabled>Done</button>
+</div>
+
+<div id="message"></div>
+<div id="historyContainer"></div>
+
+<script>
+const TOTAL = 25;
+const MIN = 2;
+const MAX = 12;
+const STORAGE_KEY = 'multiplicationHistory';
+
+let startTime = null;
+let timerInterval = null;
+let answers = [];
+let history = [];
+
+const tbody = document.getElementById('tbody');
+const startBtn = document.getElementById('startBtn');
+const doneBtn = document.getElementById('doneBtn');
+const startBtnBottom = document.getElementById('startBtnBottom');
+const doneBtnBottom = document.getElementById('doneBtnBottom');
+const timerEl = document.getElementById('timer');
+const messageEl = document.getElementById('message');
+const nameInput = document.getElementById('childName');
+const historyContainer = document.getElementById('historyContainer');
+
+function loadHistory() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    history = saved ? JSON.parse(saved) : [];
+  } catch (e) {
+    history = [];
+  }
+}
+
+function saveHistory() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+}
+
+function buildTable() {
+  tbody.innerHTML = '';
+  for (let i = 1; i <= TOTAL; i++) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i}</td>
+      <td class="problem"></td>
+      <td><input type="number" min="0" step="1" disabled></td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateUniqueProblems() {
+  const used = new Set();
+  const problems = [];
+  while (problems.length < TOTAL) {
+    const a = randomInt(MIN, MAX);
+    const b = randomInt(MIN, MAX);
+    const key = `${a}×${b}`;
+    if (!used.has(key)) {
+      used.add(key);
+      problems.push({ a, b, product: a * b });
+    }
+  }
+  return problems;
+}
+
+function formatTime(totalSeconds) {
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = Math.floor(totalSeconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+function getSpeedRating(avgSeconds) {
+  if (avgSeconds < 3) return "Lightning fast! ⚡";
+  if (avgSeconds < 4) return "Blazing speed! 🔥";
+  if (avgSeconds < 5) return "Excellent pace! ⭐";
+  if (avgSeconds < 6.5) return "Great speed! 👍";
+  if (avgSeconds < 8) return "Solid pace! 😊";
+  if (avgSeconds < 10) return "Steady and good! 💪";
+  return "Keep practicing — you’ll get faster! 🌟";
+}
+
+function getSpeedEmoji(avgSeconds) {
+  if (avgSeconds < 3) return "⚡";
+  if (avgSeconds < 4) return "🔥";
+  if (avgSeconds < 5) return "⭐";
+  if (avgSeconds < 6.5) return "👍";
+  if (avgSeconds < 8) return "😊";
+  if (avgSeconds < 10) return "💪";
+  return "🌟";
+}
+
+function getAccuracyRating(percentage) {
+  if (percentage === 100) return "Perfect accuracy! 🎯";
+  if (percentage >= 92) return "Outstanding accuracy! 🏆";
+  if (percentage >= 84) return "Excellent work! ✨";
+  if (percentage >= 76) return "Great job! 👍";
+  if (percentage >= 68) return "Good effort! 😊";
+  if (percentage >= 60) return "Nice try! Keep going! 💪";
+  return "Keep practicing — you’re improving! 🌱";
+}
+
+function getAccuracyEmoji(percentage) {
+  if (percentage === 100) return "🎯";
+  if (percentage >= 92) return "🏆";
+  if (percentage >= 84) return "✨";
+  if (percentage >= 76) return "👍";
+  if (percentage >= 68) return "😊";
+  if (percentage >= 60) return "💪";
+  return "🌱";
+}
+
+function setButtonsEnabled(startEnabled, doneEnabled) {
+  startBtn.disabled = !startEnabled;
+  startBtnBottom.disabled = !startEnabled;
+  doneBtn.disabled = !doneEnabled;
+  doneBtnBottom.disabled = !doneEnabled;
+}
+
+function renderHistory() {
+  if (history.length === 0) {
+    historyContainer.innerHTML = '';
+    return;
+  }
+
+  const sorted = [...history].reverse(); // most recent first
+
+  let html = `
+    <h2 style="font-size:1.1rem; margin:16px 0 8px 0;">History</h2>
+    <table id="historyTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Score</th>
+          <th></th>
+          <th>Time/Ans</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  sorted.forEach(entry => {
+    html += `
+      <tr>
+        <td>${entry.name}</td>
+        <td>${entry.percentage}%</td>
+        <td>${entry.scoreEmoji}</td>
+        <td>${entry.avg.toFixed(1)}s</td>
+        <td>${entry.timeEmoji}</td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </tbody>
+    </table>
+    <button class="clear-history" onclick="clearHistory()">Clear History</button>
+  `;
+
+  historyContainer.innerHTML = html;
+}
+
+function clearHistory() {
+  if (confirm('Clear all history?')) {
+    history = [];
+    saveHistory();
+    renderHistory();
+  }
+}
+
+function startQuiz() {
+  clearInterval(timerInterval);
+  messageEl.textContent = '';
+  answers = [];
+
+  const uniqueProblems = generateUniqueProblems();
+  const rows = tbody.querySelectorAll('tr');
+
+  rows.forEach((row, idx) => {
+    const { a, b, product } = uniqueProblems[idx];
+    answers.push(product);
+
+    const problemCell = row.querySelector('.problem');
+    problemCell.textContent = `${a} × ${b}`;
+
+    const input = row.querySelector('input');
+    input.value = '';
+    input.disabled = false;
+    input.classList.remove('correct', 'incorrect');
+    input.style.background = '';
+    input.style.color = '';
+  });
+
+  startTime = performance.now();
+  timerInterval = setInterval(updateTimer, 100);
+  updateTimer();
+
+  setButtonsEnabled(false, true);
+  document.querySelector('input[type="number"]').focus();
+}
+
+function updateTimer() {
+  if (!startTime) return;
+  const elapsed = (performance.now() - startTime) / 1000;
+  timerEl.textContent = `Time: ${formatTime(elapsed)}`;
+}
+
+function finishQuiz() {
+  clearInterval(timerInterval);
+  const totalSeconds = (performance.now() - startTime) / 1000;
+  const avgSeconds = totalSeconds / TOTAL;
+  const timeStr = formatTime(totalSeconds);
+
+  timerEl.textContent = `Time: ${timeStr}`;
+
+  let correctCount = 0;
+  const rows = tbody.querySelectorAll('tr');
+
+  rows.forEach((row, idx) => {
+    const input = row.querySelector('input');
+    const userVal = input.value.trim();
+    const correct = answers[idx];
+
+    input.disabled = true;
+
+    if (userVal !== '' && Number(userVal) === correct) {
+      input.classList.add('correct');
+      correctCount++;
+    } else {
+      input.classList.add('incorrect');
+    }
+  });
+
+  const percentage = Math.round((correctCount / TOTAL) * 100);
+  const childName = nameInput.value.trim() || "Student";
+  const speedRating = getSpeedRating(avgSeconds);
+  const accuracyRating = getAccuracyRating(percentage);
+  const scoreEmoji = getAccuracyEmoji(percentage);
+  const timeEmoji = getSpeedEmoji(avgSeconds);
+
+  // Result summary
+  messageEl.innerHTML = `
+    <div><strong>${childName}</strong>'s Results</div>
+    <div>Score: <strong>${correctCount}/${TOTAL} (${percentage}%)</strong> ${scoreEmoji}</div>
+    <div>Total time: <strong>${timeStr}</strong></div>
+    <div>Average time: <strong>${avgSeconds.toFixed(1)} seconds</strong> per problem ${timeEmoji}</div>
+    <div class="rating">Speed: ${speedRating}</div>
+    <div class="rating">Accuracy: ${accuracyRating}</div>
+  `;
+
+  // Save to history
+  history.push({
+    name: childName,
+    percentage,
+    scoreEmoji,
+    avg: avgSeconds,
+    timeEmoji
+  });
+
+  saveHistory();
+  renderHistory();
+
+  setButtonsEnabled(true, false);
+}
+
+// Initialize
+loadHistory();
+buildTable();
+renderHistory();
+
+startBtn.addEventListener('click', startQuiz);
+startBtnBottom.addEventListener('click', startQuiz);
+doneBtn.addEventListener('click', finishQuiz);
+doneBtnBottom.addEventListener('click', finishQuiz);
+</script>
+</body>
+</html>
