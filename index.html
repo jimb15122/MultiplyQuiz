@@ -29,16 +29,18 @@
     font-weight: 600;
     font-size: 0.95rem;
   }
-  .name-box { margin-bottom: 12px; }
-  .name-box label { font-weight: 600; margin-right: 8px; }
-  .name-box input {
+  .name-box { margin-bottom: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .name-box label { font-weight: 600; }
+  .name-box input[type="text"],
+  .name-box input[type="number"] {
     padding: 6px 8px;
     font-size: 1rem;
     border: 1px solid #ccc;
     border-radius: 4px;
-    width: 180px;
-    max-width: 100%;
   }
+  .name-box input[type="text"] { width: 140px; max-width: 100%; }
+  .name-box input[type="number"] { width: 60px; }
+  .division-check { display: flex; align-items: center; gap: 4px; }
   table {
     border-collapse: collapse;
     width: 100%;
@@ -57,7 +59,7 @@
   }
   th { background: #f0f3f6; font-weight: 600; }
   .problem { font-weight: 600; }
-  input[type="number"] {
+  input[type="number"].answer {
     width: 100%;
     max-width: 70px;
     padding: 2px 1px;
@@ -67,6 +69,7 @@
     border-radius: 3px;
     box-sizing: border-box;
   }
+  .emoji { font-size: 1.2rem; margin-left: 4px; }
   .correct { background: #d4edda !important; color: #155724; }
   .incorrect { background: #f8d7da !important; color: #721c24; }
   #message { margin-top: 10px; font-size: 1rem; line-height: 1.5; }
@@ -83,8 +86,14 @@
 <h1>25 Random Multiplication Problems</h1>
 
 <div class="name-box">
-  <label for="childName">Child's Name:</label>
+  <label for="childName">Name:</label>
   <input type="text" id="childName" placeholder="Enter name">
+  <label for="maxNum">Max:</label>
+  <input type="number" id="maxNum" value="12" min="2" max="20">
+  <label class="division-check">
+    <input type="checkbox" id="divisionMode">
+    Division
+  </label>
 </div>
 
 <div class="controls">
@@ -115,7 +124,6 @@
 <script>
 const TOTAL = 25;
 const MIN = 2;
-const MAX = 12;
 const STORAGE_KEY = 'multiplicationHistory';
 
 let startTime = null;
@@ -131,6 +139,8 @@ const doneBtnBottom = document.getElementById('doneBtnBottom');
 const timerEl = document.getElementById('timer');
 const messageEl = document.getElementById('message');
 const nameInput = document.getElementById('childName');
+const maxNumInput = document.getElementById('maxNum');
+const divisionCheckbox = document.getElementById('divisionMode');
 const historyContainer = document.getElementById('historyContainer');
 
 function loadHistory() {
@@ -153,7 +163,10 @@ function buildTable() {
     tr.innerHTML = `
       <td>${i}</td>
       <td class="problem"></td>
-      <td><input type="number" min="0" step="1" disabled></td>
+      <td>
+        <input type="number" class="answer" min="0" step="1" disabled>
+        <span class="emoji"></span>
+      </td>
     `;
     tbody.appendChild(tr);
   }
@@ -163,16 +176,28 @@ function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function generateUniqueProblems() {
+function generateUniqueProblems(max, isDivision) {
   const used = new Set();
   const problems = [];
   while (problems.length < TOTAL) {
-    const a = randomInt(MIN, MAX);
-    const b = randomInt(MIN, MAX);
-    const key = `${a}×${b}`;
+    const a = randomInt(MIN, max);
+    const b = randomInt(MIN, max);
+    const product = a * b;
+    let key, display, answer;
+
+    if (isDivision) {
+      key = `${product}÷${a}`;
+      display = `${product} ÷ ${a}`;
+      answer = b;
+    } else {
+      key = `${a}×${b}`;
+      display = `${a} × ${b}`;
+      answer = product;
+    }
+
     if (!used.has(key)) {
       used.add(key);
-      problems.push({ a, b, product: a * b });
+      problems.push({ display, answer });
     }
   }
   return problems;
@@ -185,43 +210,43 @@ function formatTime(totalSeconds) {
 }
 
 function getSpeedRating(avgSeconds) {
-  if (avgSeconds < 3) return "Lightning fast! ⚡";
-  if (avgSeconds < 4) return "Blazing speed! 🔥";
-  if (avgSeconds < 5) return "Excellent pace! ⭐";
-  if (avgSeconds < 6.5) return "Great speed! 👍";
-  if (avgSeconds < 8) return "Solid pace! 😊";
-  if (avgSeconds < 10) return "Steady and good! 💪";
-  return "Keep practicing — you’ll get faster! 🌟";
+  if (avgSeconds < 2.5) return "Eagle - Extreme Speed 🦅";
+  if (avgSeconds < 3.5) return "Cheetah - Very Fast 🐆";
+  if (avgSeconds < 4.5) return "Horse - Fast 🐎";
+  if (avgSeconds < 6) return "Dog - Average 🐕";
+  if (avgSeconds < 7.5) return "Hedgehog - Below Average 🦔";
+  if (avgSeconds < 9) return "Turtle - Slow 🐢";
+  return "Snail - Very Slow 🐌";
 }
 
 function getSpeedEmoji(avgSeconds) {
-  if (avgSeconds < 3) return "⚡";
-  if (avgSeconds < 4) return "🔥";
-  if (avgSeconds < 5) return "⭐";
-  if (avgSeconds < 6.5) return "👍";
-  if (avgSeconds < 8) return "😊";
-  if (avgSeconds < 10) return "💪";
-  return "🌟";
+  if (avgSeconds < 2.5) return "🦅";
+  if (avgSeconds < 3.5) return "🐆";
+  if (avgSeconds < 4.5) return "🐎";
+  if (avgSeconds < 6) return "🐕";
+  if (avgSeconds < 7.5) return "🦔";
+  if (avgSeconds < 9) return "🐢";
+  return "🐌";
 }
 
 function getAccuracyRating(percentage) {
-  if (percentage === 100) return "Perfect accuracy! 🎯";
-  if (percentage >= 92) return "Outstanding accuracy! 🏆";
-  if (percentage >= 84) return "Excellent work! ✨";
-  if (percentage >= 76) return "Great job! 👍";
-  if (percentage >= 68) return "Good effort! 😊";
-  if (percentage >= 60) return "Nice try! Keep going! 💪";
-  return "Keep practicing — you’re improving! 🌱";
+  if (percentage === 100) return "Perfect 💯";
+  if (percentage >= 96) return "Precise 🎯";
+  if (percentage >= 88) return "Very Accurate 🤓";
+  if (percentage >= 76) return "Good 😃";
+  if (percentage >= 64) return "Fair 🙂";
+  if (percentage >= 48) return "Uncertain 😕";
+  return "Random Guess 🎲";
 }
 
 function getAccuracyEmoji(percentage) {
-  if (percentage === 100) return "🎯";
-  if (percentage >= 92) return "🏆";
-  if (percentage >= 84) return "✨";
-  if (percentage >= 76) return "👍";
-  if (percentage >= 68) return "😊";
-  if (percentage >= 60) return "💪";
-  return "🌱";
+  if (percentage === 100) return "💯";
+  if (percentage >= 96) return "🎯";
+  if (percentage >= 88) return "🤓";
+  if (percentage >= 76) return "😃";
+  if (percentage >= 64) return "🙂";
+  if (percentage >= 48) return "😕";
+  return "🎲";
 }
 
 function setButtonsEnabled(startEnabled, doneEnabled) {
@@ -245,6 +270,7 @@ function renderHistory() {
       <thead>
         <tr>
           <th>Name</th>
+          <th>Type</th>
           <th>Score</th>
           <th></th>
           <th>Time/Ans</th>
@@ -258,6 +284,7 @@ function renderHistory() {
     html += `
       <tr>
         <td>${entry.name}</td>
+        <td>${entry.type || '×'}</td>
         <td>${entry.percentage}%</td>
         <td>${entry.scoreEmoji}</td>
         <td>${entry.avg.toFixed(1)}s</td>
@@ -288,22 +315,26 @@ function startQuiz() {
   messageEl.textContent = '';
   answers = [];
 
-  const uniqueProblems = generateUniqueProblems();
+  const max = Math.max(2, Math.min(20, parseInt(maxNumInput.value) || 12));
+  const isDivision = divisionCheckbox.checked;
+  const uniqueProblems = generateUniqueProblems(max, isDivision);
   const rows = tbody.querySelectorAll('tr');
 
   rows.forEach((row, idx) => {
-    const { a, b, product } = uniqueProblems[idx];
-    answers.push(product);
+    const { display, answer } = uniqueProblems[idx];
+    answers.push(answer);
 
     const problemCell = row.querySelector('.problem');
-    problemCell.textContent = `${a} × ${b}`;
+    problemCell.textContent = display;
 
-    const input = row.querySelector('input');
+    const input = row.querySelector('input.answer');
+    const emojiSpan = row.querySelector('.emoji');
     input.value = '';
     input.disabled = false;
     input.classList.remove('correct', 'incorrect');
     input.style.background = '';
     input.style.color = '';
+    emojiSpan.textContent = '';
   });
 
   startTime = performance.now();
@@ -311,7 +342,7 @@ function startQuiz() {
   updateTimer();
 
   setButtonsEnabled(false, true);
-  document.querySelector('input[type="number"]').focus();
+  document.querySelector('input.answer').focus();
 }
 
 function updateTimer() {
@@ -332,7 +363,8 @@ function finishQuiz() {
   const rows = tbody.querySelectorAll('tr');
 
   rows.forEach((row, idx) => {
-    const input = row.querySelector('input');
+    const input = row.querySelector('input.answer');
+    const emojiSpan = row.querySelector('.emoji');
     const userVal = input.value.trim();
     const correct = answers[idx];
 
@@ -340,9 +372,11 @@ function finishQuiz() {
 
     if (userVal !== '' && Number(userVal) === correct) {
       input.classList.add('correct');
+      emojiSpan.textContent = '✅';
       correctCount++;
     } else {
       input.classList.add('incorrect');
+      emojiSpan.textContent = '❌';
     }
   });
 
@@ -352,6 +386,7 @@ function finishQuiz() {
   const accuracyRating = getAccuracyRating(percentage);
   const scoreEmoji = getAccuracyEmoji(percentage);
   const timeEmoji = getSpeedEmoji(avgSeconds);
+  const quizType = divisionCheckbox.checked ? '÷' : '×';
 
   messageEl.innerHTML = `
     <div><strong>${childName}</strong>'s Results</div>
@@ -364,6 +399,7 @@ function finishQuiz() {
 
   history.push({
     name: childName,
+    type: quizType,
     percentage,
     scoreEmoji,
     avg: avgSeconds,
@@ -378,7 +414,7 @@ function finishQuiz() {
 
 // Auto-clear answer boxes on focus
 tbody.addEventListener('focusin', (e) => {
-  if (e.target.tagName === 'INPUT' && e.target.type === 'number' && !e.target.disabled) {
+  if (e.target.classList.contains('answer') && !e.target.disabled) {
     e.target.value = '';
   }
 });
