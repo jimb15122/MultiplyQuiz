@@ -17,7 +17,7 @@
     padding: 8px 14px;
     font-size: 1rem;
     margin-right: 6px;
-    cursor: pointer();
+    cursor: pointer;
     border: 1px solid #ccc;
     border-radius: 4px;
     background: #fff;
@@ -237,7 +237,7 @@ function renderHistory() {
     return;
   }
 
-  const sorted = [...history].reverse(); // most recent first
+  const sorted = [...history].reverse();
 
   let html = `
     <h2 style="font-size:1.1rem; margin:16px 0 8px 0;">History</h2>
@@ -353,7 +353,6 @@ function finishQuiz() {
   const scoreEmoji = getAccuracyEmoji(percentage);
   const timeEmoji = getSpeedEmoji(avgSeconds);
 
-  // Result summary
   messageEl.innerHTML = `
     <div><strong>${childName}</strong>'s Results</div>
     <div>Score: <strong>${correctCount}/${TOTAL} (${percentage}%)</strong> ${scoreEmoji}</div>
@@ -363,7 +362,6 @@ function finishQuiz() {
     <div class="rating">Accuracy: ${accuracyRating}</div>
   `;
 
-  // Save to history
   history.push({
     name: childName,
     percentage,
@@ -377,6 +375,13 @@ function finishQuiz() {
 
   setButtonsEnabled(true, false);
 }
+
+// Auto-clear answer boxes on focus
+tbody.addEventListener('focusin', (e) => {
+  if (e.target.tagName === 'INPUT' && e.target.type === 'number' && !e.target.disabled) {
+    e.target.value = '';
+  }
+});
 
 // Initialize
 loadHistory();
