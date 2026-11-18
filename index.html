@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Multiplication Practice – 25 Problems</title>
+<title>Multiplication Practice</title>
 <style>
   body {
     font-family: system-ui, Arial, sans-serif;
@@ -80,10 +80,11 @@
     font-size: 0.85rem;
   }
   .clear-history { margin-top: 8px; font-size: 0.85rem; }
+  #problemCount { font-size: 0.9rem; color: #555; margin-bottom: 8px; }
 </style>
 </head>
 <body>
-<h1>25 Random Multiplication Problems</h1>
+<h1>Multiplication / Division Practice</h1>
 
 <div class="name-box">
   <label for="childName">Name:</label>
@@ -101,6 +102,8 @@
   <button id="doneBtn" disabled>Done</button>
   <span id="timer">Time: 0:00</span>
 </div>
+
+<div id="problemCount"></div>
 
 <table id="quizTable">
   <thead>
@@ -122,7 +125,7 @@
 <div id="historyContainer"></div>
 
 <script>
-const TOTAL = 25;
+const TARGET_TOTAL = 25;
 const MIN = 2;
 const STORAGE_KEY = 'multiplicationHistory';
 
@@ -130,6 +133,7 @@ let startTime = null;
 let timerInterval = null;
 let answers = [];
 let history = [];
+let actualTotal = 0;
 
 const tbody = document.getElementById('tbody');
 const startBtn = document.getElementById('startBtn');
@@ -142,6 +146,7 @@ const nameInput = document.getElementById('childName');
 const maxNumInput = document.getElementById('maxNum');
 const divisionCheckbox = document.getElementById('divisionMode');
 const historyContainer = document.getElementById('historyContainer');
+const problemCountEl = document.getElementById('problemCount');
 
 function loadHistory() {
   try {
@@ -156,28 +161,11 @@ function saveHistory() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
 }
 
-function buildTable() {
-  tbody.innerHTML = '';
-  for (let i = 1; i <= TOTAL; i++) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${i}</td>
-      <td class="problem"></td>
-      <td>
-        <input type="number" class="answer" min="0" step="1" disabled>
-        <span class="emoji"></span>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  }
-}
-
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function generateUniqueProblems(max, isDivision) {
-  // Build full list of possible unique problems first (avoids infinite loop)
   const all = [];
   for (let a = MIN; a <= max; a++) {
     for (let b = MIN; b <= max; b++) {
@@ -185,14 +173,12 @@ function generateUniqueProblems(max, isDivision) {
       if (isDivision) {
         all.push({
           display: `${product} ÷ ${a}`,
-          answer: b,
-          key: `${product}÷${a}`
+          answer: b
         });
       } else {
         all.push({
           display: `${a} × ${b}`,
-          answer: product,
-          key: `${a}×${b}`
+          answer: product
         });
       }
     }
@@ -204,8 +190,7 @@ function generateUniqueProblems(max, isDivision) {
     [all[i], all[j]] = [all[j], all[i]];
   }
 
-  // Take up to TOTAL (or all if fewer exist)
-  return all.slice(0, TOTAL);
+  return all.slice(0, TARGET_TOTAL);
 }
 
 function formatTime(totalSeconds) {
@@ -323,30 +308,24 @@ function startQuiz() {
   const max = Math.max(2, Math.min(20, parseInt(maxNumInput.value) || 12));
   const isDivision = divisionCheckbox.checked;
   const uniqueProblems = generateUniqueProblems(max, isDivision);
-  const rows = tbody.querySelectorAll('tr');
 
-  // Only fill as many rows as we have unique problems
-  const count = Math.min(uniqueProblems.length, TOTAL);
-  rows.forEach((row, idx) => {
-    if (idx < count) {
-      const { display, answer } = uniqueProblems[idx];
-      answers.push(answer);
+  actualTotal = uniqueProblems.length;
+  problemCountEl.textContent = `Problems: ${actualTotal}` + (actualTotal < TARGET_TOTAL ? ` (only ${actualTotal} unique available with max ${max})` : '');
 
-      const problemCell = row.querySelector('.problem');
-      problemCell.textContent = display;
-
-      const input = row.querySelector('input.answer');
-      const emojiSpan = row.querySelector('.emoji');
-      input.value = '';
-      input.disabled = false;
-      input.classList.remove('correct', 'incorrect');
-      input.style.background = '';
-      input.style.color = '';
-      emojiSpan.textContent = '';
-    } else {
-      // Hide extra rows if fewer than 25 unique problems
-      row.style.display = 'none';
-    }
+  // Rebuild table with exact number of rows needed
+  tbody.innerHTML = '';
+  uniqueProblems.forEach((prob, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${idx + 1}</td>
+      <td class="problem">${prob.display}</td>
+      <td>
+        <input type="number" class="answer" min="0" step="1">
+        <span class="emoji"></span>
+      </td>
+    `;
+    tbody.appendChild(tr);
+    answers.push(prob.answer);
   });
 
   startTime = performance.now();
@@ -354,7 +333,7 @@ function startQuiz() {
   updateTimer();
 
   setButtonsEnabled(false, true);
-  const firstInput = document.querySelector('input.answer:not([disabled])');
+  const firstInput = document.querySelector('input.answer');
   if (firstInput) firstInput.focus();
 }
 
@@ -367,7 +346,7 @@ function updateTimer() {
 function finishQuiz() {
   clearInterval(timerInterval);
   const totalSeconds = (performance.now() - startTime) / 1000;
-  const avgSeconds = totalSeconds / answers.length || 1;
+  const avgSeconds = totalSeconds / actualTotal || 1;
   const timeStr = formatTime(totalSeconds);
 
   timerEl.textContent = `Time: ${timeStr}`;
@@ -376,7 +355,6 @@ function finishQuiz() {
   const rows = tbody.querySelectorAll('tr');
 
   rows.forEach((row, idx) => {
-    if (idx >= answers.length) return;
     const input = row.querySelector('input.answer');
     const emojiSpan = row.querySelector('.emoji');
     const userVal = input.value.trim();
@@ -394,7 +372,7 @@ function finishQuiz() {
     }
   });
 
-  const percentage = Math.round((correctCount / answers.length) * 100);
+  const percentage = Math.round((correctCount / actualTotal) * 100);
   const childName = nameInput.value.trim() || "Student";
   const speedRating = getSpeedRating(avgSeconds);
   const accuracyRating = getAccuracyRating(percentage);
@@ -404,7 +382,7 @@ function finishQuiz() {
 
   messageEl.innerHTML = `
     <div><strong>${childName}</strong>'s Results</div>
-    <div>Score: <strong>${correctCount}/${answers.length} (${percentage}%)</strong> ${scoreEmoji}</div>
+    <div>Score: <strong>${correctCount}/${actualTotal} (${percentage}%)</strong> ${scoreEmoji}</div>
     <div>Total time: <strong>${timeStr}</strong></div>
     <div>Average time: <strong>${avgSeconds.toFixed(1)} seconds</strong> per problem ${timeEmoji}</div>
     <div class="rating">Speed: ${speedRating}</div>
@@ -424,9 +402,6 @@ function finishQuiz() {
   renderHistory();
 
   setButtonsEnabled(true, false);
-
-  // Restore all rows for next quiz
-  rows.forEach(row => row.style.display = '');
 }
 
 // Auto-clear answer boxes on focus
@@ -438,7 +413,6 @@ tbody.addEventListener('focusin', (e) => {
 
 // Initialize
 loadHistory();
-buildTable();
 renderHistory();
 
 startBtn.addEventListener('click', startQuiz);
