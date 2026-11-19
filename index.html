@@ -85,10 +85,9 @@
     padding: 6px 2px; 
     font-size: 0.85rem;
   }
-  .clear-history { margin-top: 8px; font-size: 0.85rem; }
+  #historyTable tbody tr { position: relative; }
   #problemCount { font-size: 0.9rem; color: #555; margin-bottom: 8px; }
 
-  /* Fixed bottom keypad */
   #keypad {
     display: none;
     position: fixed;
@@ -125,6 +124,29 @@
   }
   .key:active { background: #e0e0e0; }
   .key.wide { max-width: none; flex: 1; font-size: 1.3rem; }
+
+  .flyout {
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 2000;
+    padding: 4px 0;
+    min-width: 100px;
+  }
+  .flyout button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  .flyout button:hover { background: #f0f0f0; }
+  .flyout .delete { color: #c0392b; }
 </style>
 </head>
 <body>
@@ -160,7 +182,6 @@
   <tbody id="tbody"></tbody>
 </table>
 
-<!-- Fixed Number Keypad -->
 <div id="keypad">
   <div class="keypad-row">
     <div class="key" data-digit="1">1</div>
@@ -193,7 +214,8 @@
 <script>
 const TARGET_TOTAL = 25;
 const MIN = 2;
-const STORAGE_KEY = 'multiplicationHistory';
+const HISTORY_KEY = 'multiplicationHistory';
+const SETTINGS_KEY = 'multiplicationSettings';
 
 let startTime = null;
 let timerInterval = null;
@@ -203,6 +225,8 @@ let actualTotal = 0;
 let activeInput = null;
 let quizActive = false;
 let wakeLock = null;
+let longPressTimer = null;
+let currentFlyout = null;
 
 const tbody = document.getElementById('tbody');
 const startBtn = document.getElementById('startBtn');
@@ -220,7 +244,7 @@ const keypad = document.getElementById('keypad');
 
 function loadHistory() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(HISTORY_KEY);
     history = saved ? JSON.parse(saved) : [];
   } catch (e) {
     history = [];
@@ -228,7 +252,26 @@ function loadHistory() {
 }
 
 function saveHistory() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
+function loadSettings() {
+  try {
+    const saved = localStorage.getItem(SETTINGS_KEY);
+    if (saved) {
+      const settings = JSON.parse(saved);
+      if (settings.name) nameInput.value = settings.name;
+      if (settings.max) maxNumInput.value = settings.max;
+    }
+  } catch (e) {}
+}
+
+function saveSettings() {
+  const settings = {
+    name: nameInput.value.trim(),
+    max: maxNumInput.value
+  };
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
 function generateUniqueProblems(max, isDivision) {
@@ -257,40 +300,23 @@ function formatTime(totalSeconds) {
 }
 
 function getSpeedRating(avgSeconds) {
-  if (avgSeconds < 2.5) return "Eagle - Extreme Speed 🦅";
-  if (avgSeconds < 3.5) return "Cheetah - Very Fast 🐆";
-  if (avgSeconds < 4.5) return "Horse - Fast 🐎";
-  if (avgSeconds < 6) return "Dog - Average 🐕";
-  if (avgSeconds < 7.5) return "Hedgehog - Below Average 🦔";
-  if (avgSeconds < 9) return "Turtle - Slow 🐢";
-  return "Snail - Very Slow 🐌";
+  if (avgSeconds < 3.5) return "🦅 Eagle - Extreme Speed";
+  if (avgSeconds < 4.5) return "🐆 Cheetah - Very Fast";
+  if (avgSeconds < 5.5) return "🐎 Horse - Fast";
+  if (avgSeconds < 7) return "🐕 Dog - Average";
+  if (avgSeconds < 8.5) return "🦔 Hedgehog - Below Average";
+  if (avgSeconds < 10) return "🐢 Turtle - Slow";
+  return "🐌 Snail - Very Slow";
 }
-function getSpeedEmoji(avgSeconds) {
-  if (avgSeconds < 2.5) return "🦅";
-  if (avgSeconds < 3.5) return "🐆";
-  if (avgSeconds < 4.5) return "🐎";
-  if (avgSeconds < 6) return "🐕";
-  if (avgSeconds < 7.5) return "🦔";
-  if (avgSeconds < 9) return "🐢";
-  return "🐌";
-}
+
 function getAccuracyRating(percentage) {
-  if (percentage === 100) return "Perfect 💯";
-  if (percentage >= 96) return "Precise 🎯";
-  if (percentage >= 88) return "Very Accurate 🤓";
-  if (percentage >= 76) return "Good 😃";
-  if (percentage >= 64) return "Fair 🙂";
-  if (percentage >= 48) return "Uncertain 😕";
-  return "Random Guess 🎲";
-}
-function getAccuracyEmoji(percentage) {
-  if (percentage === 100) return "💯";
-  if (percentage >= 96) return "🎯";
-  if (percentage >= 88) return "🤓";
-  if (percentage >= 76) return "😃";
-  if (percentage >= 64) return "🙂";
-  if (percentage >= 48) return "😕";
-  return "🎲";
+  if (percentage === 100) return "💯 Perfect";
+  if (percentage >= 96) return "🎯 Precise";
+  if (percentage >= 88) return "🤓 Very Accurate";
+  if (percentage >= 76) return "😃 Good";
+  if (percentage >= 64) return "🙂 Fair";
+  if (percentage >= 48) return "😕 Uncertain";
+  return "🎲 Random Guess";
 }
 
 function setButtonsEnabled(startEnabled, doneEnabled) {
@@ -298,6 +324,39 @@ function setButtonsEnabled(startEnabled, doneEnabled) {
   startBtnBottom.disabled = !startEnabled;
   doneBtn.disabled = !doneEnabled;
   doneBtnBottom.disabled = !doneEnabled;
+}
+
+function hideFlyout() {
+  if (currentFlyout) {
+    currentFlyout.remove();
+    currentFlyout = null;
+  }
+}
+
+function showFlyout(row, index) {
+  hideFlyout();
+  const flyout = document.createElement('div');
+  flyout.className = 'flyout';
+  flyout.innerHTML = `<button class="delete">Delete</button>`;
+  document.body.appendChild(flyout);
+
+  const rect = row.getBoundingClientRect();
+  flyout.style.left = (rect.left + 20) + 'px';
+  flyout.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+
+  flyout.querySelector('.delete').onclick = () => {
+    history.splice(index, 1);
+    saveHistory();
+    renderHistory();
+    hideFlyout();
+  };
+
+  currentFlyout = flyout;
+
+  setTimeout(() => {
+    document.addEventListener('click', hideFlyout, { once: true });
+    document.addEventListener('touchstart', hideFlyout, { once: true });
+  }, 10);
 }
 
 function renderHistory() {
@@ -321,9 +380,10 @@ function renderHistory() {
       </thead>
       <tbody>
   `;
-  sorted.forEach(entry => {
+  sorted.forEach((entry, displayIdx) => {
+    const realIndex = history.length - 1 - displayIdx;
     html += `
-      <tr>
+      <tr data-index="${realIndex}">
         <td>${entry.name}</td>
         <td>${entry.type || '×'}</td>
         <td>${entry.percentage}%</td>
@@ -333,16 +393,27 @@ function renderHistory() {
       </tr>
     `;
   });
-  html += `</tbody></table><button class="clear-history" onclick="clearHistory()">Clear History</button>`;
+  html += `</tbody></table>`;
   historyContainer.innerHTML = html;
-}
 
-function clearHistory() {
-  if (confirm('Clear all history?')) {
-    history = [];
-    saveHistory();
-    renderHistory();
-  }
+  document.querySelectorAll('#historyTable tbody tr').forEach(row => {
+    row.addEventListener('touchstart', (e) => {
+      longPressTimer = setTimeout(() => {
+        const index = parseInt(row.dataset.index);
+        showFlyout(row, index);
+      }, 500);
+    });
+    row.addEventListener('touchend', () => clearTimeout(longPressTimer));
+    row.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+    row.addEventListener('mousedown', (e) => {
+      longPressTimer = setTimeout(() => {
+        const index = parseInt(row.dataset.index);
+        showFlyout(row, index);
+      }, 500);
+    });
+    row.addEventListener('mouseup', () => clearTimeout(longPressTimer));
+    row.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
+  });
 }
 
 function highlightRow(input) {
@@ -368,41 +439,27 @@ function advanceToNextEmpty() {
 
 async function enterLockMode() {
   quizActive = true;
-
-  // Push a dummy history state so back button can be intercepted
   history.pushState({ quiz: true }, '');
-
-  // Request fullscreen
   try {
     if (document.documentElement.requestFullscreen) {
       await document.documentElement.requestFullscreen();
     } else if (document.documentElement.webkitRequestFullscreen) {
       await document.documentElement.webkitRequestFullscreen();
     }
-  } catch (e) {
-    console.log('Fullscreen not available');
-  }
-
-  // Keep screen awake
+  } catch (e) {}
   try {
     if ('wakeLock' in navigator) {
       wakeLock = await navigator.wakeLock.request('screen');
     }
-  } catch (e) {
-    console.log('Wake Lock not available');
-  }
+  } catch (e) {}
 }
 
 function exitLockMode() {
   quizActive = false;
-
-  // Exit fullscreen
   if (document.fullscreenElement || document.webkitFullscreenElement) {
     if (document.exitFullscreen) document.exitFullscreen();
     else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
   }
-
-  // Release wake lock
   if (wakeLock) {
     wakeLock.release();
     wakeLock = null;
@@ -414,6 +471,7 @@ function startQuiz() {
   messageEl.textContent = '';
   answers = [];
   activeInput = null;
+  saveSettings();
 
   const max = Math.max(2, Math.min(20, parseInt(maxNumInput.value) || 12));
   const isDivision = divisionCheckbox.checked;
@@ -444,7 +502,6 @@ function startQuiz() {
   updateTimer();
 
   setButtonsEnabled(false, true);
-
   enterLockMode();
 
   const firstInput = document.querySelector('input.answer');
@@ -498,8 +555,8 @@ function finishQuiz() {
   const childName = nameInput.value.trim() || "Student";
   const speedRating = getSpeedRating(avgSeconds);
   const accuracyRating = getAccuracyRating(percentage);
-  const scoreEmoji = getAccuracyEmoji(percentage);
-  const timeEmoji = getSpeedEmoji(avgSeconds);
+  const scoreEmoji = accuracyRating.charAt(0);
+  const timeEmoji = speedRating.charAt(0);
   const quizType = divisionCheckbox.checked ? '÷' : '×';
 
   messageEl.innerHTML = `
@@ -525,7 +582,6 @@ function finishQuiz() {
   setButtonsEnabled(true, false);
 }
 
-// Prevent back navigation while quiz is active
 window.addEventListener('popstate', (e) => {
   if (quizActive) {
     history.pushState({ quiz: true }, '');
@@ -533,7 +589,6 @@ window.addEventListener('popstate', (e) => {
   }
 });
 
-// Track focused input and highlight entire row
 tbody.addEventListener('focusin', (e) => {
   if (e.target.classList.contains('answer') && !e.target.disabled) {
     activeInput = e.target;
@@ -542,7 +597,6 @@ tbody.addEventListener('focusin', (e) => {
   }
 });
 
-// Keypad clicks
 keypad.addEventListener('click', (e) => {
   const key = e.target.closest('.key');
   if (!key || !activeInput || activeInput.disabled) return;
@@ -556,8 +610,11 @@ keypad.addEventListener('click', (e) => {
   }
 });
 
-// Initialize
+nameInput.addEventListener('change', saveSettings);
+maxNumInput.addEventListener('change', saveSettings);
+
 loadHistory();
+loadSettings();
 renderHistory();
 
 startBtn.addEventListener('click', startQuiz);
