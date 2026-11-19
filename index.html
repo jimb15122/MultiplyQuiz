@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Multiplication Practice</title>
 <style>
   body {
@@ -10,6 +10,8 @@
     margin: 8px;
     background: #f5f7fa;
     padding-bottom: 180px;
+    -webkit-user-select: none;
+    user-select: none;
   }
   h1 { font-size: 1.25rem; margin: 0 0 10px 0; }
   .controls, .bottom-controls { margin-bottom: 12px; }
@@ -199,6 +201,8 @@ let answers = [];
 let history = [];
 let actualTotal = 0;
 let activeInput = null;
+let quizActive = false;
+let wakeLock = null;
 
 const tbody = document.getElementById('tbody');
 const startBtn = document.getElementById('startBtn');
@@ -358,8 +362,50 @@ function advanceToNextEmpty() {
     activeInput = emptyInput;
     highlightRow(emptyInput);
   } else {
-    // No empty answers left → treat as Done
     finishQuiz();
+  }
+}
+
+async function enterLockMode() {
+  quizActive = true;
+
+  // Push a dummy history state so back button can be intercepted
+  history.pushState({ quiz: true }, '');
+
+  // Request fullscreen
+  try {
+    if (document.documentElement.requestFullscreen) {
+      await document.documentElement.requestFullscreen();
+    } else if (document.documentElement.webkitRequestFullscreen) {
+      await document.documentElement.webkitRequestFullscreen();
+    }
+  } catch (e) {
+    console.log('Fullscreen not available');
+  }
+
+  // Keep screen awake
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+    }
+  } catch (e) {
+    console.log('Wake Lock not available');
+  }
+}
+
+function exitLockMode() {
+  quizActive = false;
+
+  // Exit fullscreen
+  if (document.fullscreenElement || document.webkitFullscreenElement) {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+  }
+
+  // Release wake lock
+  if (wakeLock) {
+    wakeLock.release();
+    wakeLock = null;
   }
 }
 
@@ -399,6 +445,8 @@ function startQuiz() {
 
   setButtonsEnabled(false, true);
 
+  enterLockMode();
+
   const firstInput = document.querySelector('input.answer');
   if (firstInput) {
     firstInput.focus();
@@ -416,6 +464,8 @@ function updateTimer() {
 function finishQuiz() {
   clearInterval(timerInterval);
   keypad.classList.remove('active');
+  exitLockMode();
+
   const totalSeconds = (performance.now() - startTime) / 1000;
   const avgSeconds = totalSeconds / actualTotal || 1;
   const timeStr = formatTime(totalSeconds);
@@ -474,6 +524,14 @@ function finishQuiz() {
   renderHistory();
   setButtonsEnabled(true, false);
 }
+
+// Prevent back navigation while quiz is active
+window.addEventListener('popstate', (e) => {
+  if (quizActive) {
+    history.pushState({ quiz: true }, '');
+    alert('Finish the quiz first!');
+  }
+});
 
 // Track focused input and highlight entire row
 tbody.addEventListener('focusin', (e) => {
