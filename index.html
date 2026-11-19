@@ -300,23 +300,23 @@ function formatTime(totalSeconds) {
 }
 
 function getSpeedRating(avgSeconds) {
-  if (avgSeconds < 3.5) return "🦅 Eagle - Extreme Speed";
-  if (avgSeconds < 4.5) return "🐆 Cheetah - Very Fast";
-  if (avgSeconds < 5.5) return "🐎 Horse - Fast";
-  if (avgSeconds < 7) return "🐕 Dog - Average";
-  if (avgSeconds < 8.5) return "🦔 Hedgehog - Below Average";
-  if (avgSeconds < 10) return "🐢 Turtle - Slow";
-  return "🐌 Snail - Very Slow";
+  if (avgSeconds < 3.5) return { emoji: "🦅", text: "Eagle - Extreme Speed" };
+  if (avgSeconds < 4.5) return { emoji: "🐆", text: "Cheetah - Very Fast" };
+  if (avgSeconds < 5.5) return { emoji: "🐎", text: "Horse - Fast" };
+  if (avgSeconds < 7) return { emoji: "🐕", text: "Dog - Average" };
+  if (avgSeconds < 8.5) return { emoji: "🦔", text: "Hedgehog - Below Average" };
+  if (avgSeconds < 10) return { emoji: "🐢", text: "Turtle - Slow" };
+  return { emoji: "🐌", text: "Snail - Very Slow" };
 }
 
 function getAccuracyRating(percentage) {
-  if (percentage === 100) return "💯 Perfect";
-  if (percentage >= 96) return "🎯 Precise";
-  if (percentage >= 88) return "🤓 Very Accurate";
-  if (percentage >= 76) return "😃 Good";
-  if (percentage >= 64) return "🙂 Fair";
-  if (percentage >= 48) return "😕 Uncertain";
-  return "🎲 Random Guess";
+  if (percentage === 100) return { emoji: "💯", text: "Perfect" };
+  if (percentage >= 96) return { emoji: "🎯", text: "Precise" };
+  if (percentage >= 88) return { emoji: "🤓", text: "Very Accurate" };
+  if (percentage >= 76) return { emoji: "😃", text: "Good" };
+  if (percentage >= 64) return { emoji: "🙂", text: "Fair" };
+  if (percentage >= 48) return { emoji: "😕", text: "Uncertain" };
+  return { emoji: "🎲", text: "Random Guess" };
 }
 
 function setButtonsEnabled(startEnabled, doneEnabled) {
@@ -344,7 +344,10 @@ function showFlyout(row, index) {
   flyout.style.left = (rect.left + 20) + 'px';
   flyout.style.top = (rect.bottom + window.scrollY + 4) + 'px';
 
-  flyout.querySelector('.delete').onclick = () => {
+  const deleteBtn = flyout.querySelector('.delete');
+  deleteBtn.onclick = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
     history.splice(index, 1);
     saveHistory();
     renderHistory();
@@ -353,10 +356,16 @@ function showFlyout(row, index) {
 
   currentFlyout = flyout;
 
+  // Close when tapping outside
   setTimeout(() => {
-    document.addEventListener('click', hideFlyout, { once: true });
-    document.addEventListener('touchstart', hideFlyout, { once: true });
-  }, 10);
+    const closer = (ev) => {
+      if (!flyout.contains(ev.target)) {
+        hideFlyout();
+      }
+    };
+    document.addEventListener('click', closer, { once: true });
+    document.addEventListener('touchstart', closer, { once: true });
+  }, 50);
 }
 
 function renderHistory() {
@@ -553,28 +562,26 @@ function finishQuiz() {
 
   const percentage = Math.round((correctCount / actualTotal) * 100);
   const childName = nameInput.value.trim() || "Student";
-  const speedRating = getSpeedRating(avgSeconds);
-  const accuracyRating = getAccuracyRating(percentage);
-  const scoreEmoji = accuracyRating.charAt(0);
-  const timeEmoji = speedRating.charAt(0);
+  const speed = getSpeedRating(avgSeconds);
+  const accuracy = getAccuracyRating(percentage);
   const quizType = divisionCheckbox.checked ? '÷' : '×';
 
   messageEl.innerHTML = `
     <div><strong>${childName}</strong>'s Results</div>
-    <div>Score: <strong>${correctCount}/${actualTotal} (${percentage}%)</strong> ${scoreEmoji}</div>
+    <div>Score: <strong>${correctCount}/${actualTotal} (${percentage}%)</strong> ${accuracy.emoji}</div>
     <div>Total time: <strong>${timeStr}</strong></div>
-    <div>Average time: <strong>${avgSeconds.toFixed(1)} seconds</strong> per problem ${timeEmoji}</div>
-    <div class="rating">Speed: ${speedRating}</div>
-    <div class="rating">Accuracy: ${accuracyRating}</div>
+    <div>Average time: <strong>${avgSeconds.toFixed(1)} seconds</strong> per problem ${speed.emoji}</div>
+    <div class="rating">Speed: ${speed.emoji} ${speed.text}</div>
+    <div class="rating">Accuracy: ${accuracy.emoji} ${accuracy.text}</div>
   `;
 
   history.push({
     name: childName,
     type: quizType,
     percentage,
-    scoreEmoji,
+    scoreEmoji: accuracy.emoji,
     avg: avgSeconds,
-    timeEmoji
+    timeEmoji: speed.emoji
   });
 
   saveHistory();
