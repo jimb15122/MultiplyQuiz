@@ -518,24 +518,43 @@ function renderHistory() {
 
 
 function highlightRow(input) {
-  document.querySelectorAll('.focused-row').forEach(row => row.classList.remove('focused-row'));
-  if (input) {
-    const row = input.closest('tr');
-    if (row) row.classList.add('focused-row');
-  }
+  const current = document.querySelector('.focused-row');
+  if (current) current.classList.remove('focused-row');
+
+  if (!input) return;
+
+  const row = input.closest('tr');
+  if (row) row.classList.add('focused-row');
 }
 
+
 function advanceToNextEmpty() {
-  const inputs = Array.from(document.querySelectorAll('input.answer:not([disabled])'));
+  const inputs = Array.from(
+    document.querySelectorAll('input.answer:not([disabled])')
+  );
+
   const emptyInput = inputs.find(input => input.value.trim() === '');
+
   if (emptyInput) {
-    emptyInput.focus();
     activeInput = emptyInput;
-    highlightRow(emptyInput);
+
+    requestAnimationFrame(() => {
+      highlightRow(emptyInput);
+
+      // Prevent Safari/Chrome from auto-scrolling the page
+      emptyInput.focus({ preventScroll: true });
+
+      // Do our own controlled scroll
+      emptyInput.closest('tr').scrollIntoView({
+        block: 'center',
+        behavior: 'instant'
+      });
+    });
   } else {
     finishQuiz();
   }
 }
+
 
 async function enterLockMode() {
   quizActive = true;
