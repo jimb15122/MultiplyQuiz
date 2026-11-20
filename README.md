@@ -1,6 +1,6 @@
 A little web app for math practice.  
 
-Enter a name, and choose difficulty by entering the maximum number to use in problems.
+Enter a name, and choose difficulty by entering the maximum number value to use in the problems.
 
 Tap a problem type to show the 25 problems and start the timer.
 
