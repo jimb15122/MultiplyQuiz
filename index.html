@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Multiplication Practice</title>
+<title>Math Practice</title>
 <style>
   body {
     font-family: system-ui, Arial, sans-serif;
@@ -26,6 +26,7 @@
     background: #fff;
   }
   button:hover { background: #eee; }
+  .op-btn { font-size: 1.2rem; font-weight: 600; min-width: 48px; }
   #timer {
     display: inline-block;
     margin-left: 8px;
@@ -43,7 +44,6 @@
   }
   .name-box input[type="text"] { width: 140px; max-width: 100%; }
   .name-box input[type="number"] { width: 60px; }
-  .division-check { display: flex; align-items: center; gap: 4px; }
   table {
     border-collapse: collapse;
     width: 100%;
@@ -150,21 +150,20 @@
 </style>
 </head>
 <body>
-<h1>Multiplication / Division Practice</h1>
+<h1>Math Practice</h1>
 
 <div class="name-box">
   <label for="childName">Name:</label>
   <input type="text" id="childName" placeholder="Enter name">
   <label for="maxNum">Max:</label>
   <input type="number" id="maxNum" value="12" min="2" max="20">
-  <label class="division-check">
-    <input type="checkbox" id="divisionMode">
-    Division
-  </label>
 </div>
 
 <div class="controls">
-  <button id="startBtn">Start</button>
+  <button class="op-btn" data-op="+">+</button>
+  <button class="op-btn" data-op="−">−</button>
+  <button class="op-btn" data-op="×">×</button>
+  <button class="op-btn" data-op="÷">÷</button>
   <button id="doneBtn" disabled>Done</button>
   <span id="timer">Time: 0:00</span>
 </div>
@@ -204,7 +203,10 @@
 </div>
 
 <div class="bottom-controls">
-  <button id="startBtnBottom">Start</button>
+  <button class="op-btn" data-op="+">+</button>
+  <button class="op-btn" data-op="−">−</button>
+  <button class="op-btn" data-op="×">×</button>
+  <button class="op-btn" data-op="÷">÷</button>
   <button id="doneBtnBottom" disabled>Done</button>
 </div>
 
@@ -227,17 +229,15 @@ let quizActive = false;
 let wakeLock = null;
 let longPressTimer = null;
 let currentFlyout = null;
+let currentOp = '×';
 
 const tbody = document.getElementById('tbody');
-const startBtn = document.getElementById('startBtn');
 const doneBtn = document.getElementById('doneBtn');
-const startBtnBottom = document.getElementById('startBtnBottom');
 const doneBtnBottom = document.getElementById('doneBtnBottom');
 const timerEl = document.getElementById('timer');
 const messageEl = document.getElementById('message');
 const nameInput = document.getElementById('childName');
 const maxNumInput = document.getElementById('maxNum');
-const divisionCheckbox = document.getElementById('divisionMode');
 const historyContainer = document.getElementById('historyContainer');
 const problemCountEl = document.getElementById('problemCount');
 const keypad = document.getElementById('keypad');
@@ -274,18 +274,30 @@ function saveSettings() {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
-function generateUniqueProblems(max, isDivision) {
+function generateUniqueProblems(max, op) {
   const all = [];
   for (let a = MIN; a <= max; a++) {
     for (let b = MIN; b <= max; b++) {
-      const product = a * b;
-      if (isDivision) {
-        all.push({ display: `${product} ÷ ${a}`, answer: b });
-      } else {
-        all.push({ display: `${a} × ${b}`, answer: product });
+      let display, answer;
+      if (op === '+') {
+        display = `${a} + ${b}`;
+        answer = a + b;
+      } else if (op === '−') {
+        if (a < b) continue; // only non-negative results
+        display = `${a} − ${b}`;
+        answer = a - b;
+      } else if (op === '×') {
+        display = `${a} × ${b}`;
+        answer = a * b;
+      } else if (op === '÷') {
+        const product = a * b;
+        display = `${product} ÷ ${a}`;
+        answer = b;
       }
+      all.push({ display, answer });
     }
   }
+  // Shuffle
   for (let i = all.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [all[i], all[j]] = [all[j], all[i]];
@@ -303,26 +315,24 @@ function getSpeedRating(avgSeconds) {
   if (avgSeconds < 3.5) return { emoji: "🦅", text: "Eagle - Extreme Speed" };
   if (avgSeconds < 4.5) return { emoji: "🐆", text: "Cheetah - Very Fast" };
   if (avgSeconds < 5.5) return { emoji: "🐎", text: "Horse - Fast" };
-  if (avgSeconds < 7) return { emoji: "🐕‍🦺", text: "Dog - Average" };
-  if (avgSeconds < 8) return { emoji: "🦔", text: "Hedgehog - Below Average" };
-  if (avgSeconds < 9) return { emoji: "🐢", text: "Turtle - Slow" };
-  if (avgSeconds < 10) return { emoji: "🦥", text: "Sloth - Very Slow" };
-  return { emoji: "🐌", text: "Snail - Extremely Slow" };
+  if (avgSeconds < 7) return { emoji: "🐕", text: "Dog - Average" };
+  if (avgSeconds < 8.5) return { emoji: "🦔", text: "Hedgehog - Below Average" };
+  if (avgSeconds < 10) return { emoji: "🐢", text: "Turtle - Slow" };
+  return { emoji: "🐌", text: "Snail - Very Slow" };
 }
 
 function getAccuracyRating(percentage) {
   if (percentage === 100) return { emoji: "💯", text: "Perfect" };
-  if (percentage >= 96) return { emoji: "🎯", text: "Near Perfect" };
-  if (percentage >= 88) return { emoji: "😃", text: "Very Good" };
-  if (percentage >= 76) return { emoji: "🤓", text: "Good" };
+  if (percentage >= 96) return { emoji: "🎯", text: "Precise" };
+  if (percentage >= 88) return { emoji: "🤓", text: "Very Accurate" };
+  if (percentage >= 76) return { emoji: "😃", text: "Good" };
   if (percentage >= 64) return { emoji: "🙂", text: "Fair" };
-  if (percentage >= 48) return { emoji: "😕", text: "Poor" };
-  return { emoji: "😒", text: "Very Poor" };
+  if (percentage >= 48) return { emoji: "😕", text: "Uncertain" };
+  return { emoji: "🎲", text: "Random Guess" };
 }
 
 function setButtonsEnabled(startEnabled, doneEnabled) {
-  startBtn.disabled = !startEnabled;
-  startBtnBottom.disabled = !startEnabled;
+  document.querySelectorAll('.op-btn').forEach(btn => btn.disabled = !startEnabled);
   doneBtn.disabled = !doneEnabled;
   doneBtnBottom.disabled = !doneEnabled;
 }
@@ -357,12 +367,9 @@ function showFlyout(row, index) {
 
   currentFlyout = flyout;
 
-  // Close when tapping outside
   setTimeout(() => {
     const closer = (ev) => {
-      if (!flyout.contains(ev.target)) {
-        hideFlyout();
-      }
+      if (!flyout.contains(ev.target)) hideFlyout();
     };
     document.addEventListener('click', closer, { once: true });
     document.addEventListener('touchstart', closer, { once: true });
@@ -407,7 +414,7 @@ function renderHistory() {
   historyContainer.innerHTML = html;
 
   document.querySelectorAll('#historyTable tbody tr').forEach(row => {
-    row.addEventListener('touchstart', (e) => {
+    row.addEventListener('touchstart', () => {
       longPressTimer = setTimeout(() => {
         const index = parseInt(row.dataset.index);
         showFlyout(row, index);
@@ -415,7 +422,7 @@ function renderHistory() {
     });
     row.addEventListener('touchend', () => clearTimeout(longPressTimer));
     row.addEventListener('touchmove', () => clearTimeout(longPressTimer));
-    row.addEventListener('mousedown', (e) => {
+    row.addEventListener('mousedown', () => {
       longPressTimer = setTimeout(() => {
         const index = parseInt(row.dataset.index);
         showFlyout(row, index);
@@ -437,7 +444,6 @@ function highlightRow(input) {
 function advanceToNextEmpty() {
   const inputs = Array.from(document.querySelectorAll('input.answer:not([disabled])'));
   const emptyInput = inputs.find(input => input.value.trim() === '');
-
   if (emptyInput) {
     emptyInput.focus();
     activeInput = emptyInput;
@@ -451,16 +457,11 @@ async function enterLockMode() {
   quizActive = true;
   history.pushState({ quiz: true }, '');
   try {
-    if (document.documentElement.requestFullscreen) {
-      await document.documentElement.requestFullscreen();
-    } else if (document.documentElement.webkitRequestFullscreen) {
-      await document.documentElement.webkitRequestFullscreen();
-    }
+    if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+    else if (document.documentElement.webkitRequestFullscreen) await document.documentElement.webkitRequestFullscreen();
   } catch (e) {}
   try {
-    if ('wakeLock' in navigator) {
-      wakeLock = await navigator.wakeLock.request('screen');
-    }
+    if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
   } catch (e) {}
 }
 
@@ -470,22 +471,19 @@ function exitLockMode() {
     if (document.exitFullscreen) document.exitFullscreen();
     else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
   }
-  if (wakeLock) {
-    wakeLock.release();
-    wakeLock = null;
-  }
+  if (wakeLock) { wakeLock.release(); wakeLock = null; }
 }
 
-function startQuiz() {
+function startQuiz(op) {
   clearInterval(timerInterval);
   messageEl.textContent = '';
   answers = [];
   activeInput = null;
+  currentOp = op;
   saveSettings();
 
   const max = Math.max(2, Math.min(20, parseInt(maxNumInput.value) || 12));
-  const isDivision = divisionCheckbox.checked;
-  const uniqueProblems = generateUniqueProblems(max, isDivision);
+  const uniqueProblems = generateUniqueProblems(max, op);
 
   actualTotal = uniqueProblems.length;
   problemCountEl.textContent = `Problems: ${actualTotal}` + (actualTotal < TARGET_TOTAL ? ` (only ${actualTotal} unique with max ${max})` : '');
@@ -506,7 +504,6 @@ function startQuiz() {
   });
 
   keypad.classList.add('active');
-
   startTime = performance.now();
   timerInterval = setInterval(updateTimer, 100);
   updateTimer();
@@ -536,7 +533,6 @@ function finishQuiz() {
   const totalSeconds = (performance.now() - startTime) / 1000;
   const avgSeconds = totalSeconds / actualTotal || 1;
   const timeStr = formatTime(totalSeconds);
-
   timerEl.textContent = `Time: ${timeStr}`;
 
   let correctCount = 0;
@@ -557,7 +553,7 @@ function finishQuiz() {
       correctCount++;
     } else {
       input.classList.add('incorrect');
-      emojiSpan.textContent = '❌';
+      emojiSpan.textContent = `❌ ${correct}`;
     }
   });
 
@@ -565,7 +561,6 @@ function finishQuiz() {
   const childName = nameInput.value.trim() || "Student";
   const speed = getSpeedRating(avgSeconds);
   const accuracy = getAccuracyRating(percentage);
-  const quizType = divisionCheckbox.checked ? '÷' : '×';
 
   messageEl.innerHTML = `
     <div><strong>${childName}</strong>'s Results</div>
@@ -578,7 +573,7 @@ function finishQuiz() {
 
   history.push({
     name: childName,
-    type: quizType,
+    type: currentOp,
     percentage,
     scoreEmoji: accuracy.emoji,
     avg: avgSeconds,
@@ -590,7 +585,7 @@ function finishQuiz() {
   setButtonsEnabled(true, false);
 }
 
-window.addEventListener('popstate', (e) => {
+window.addEventListener('popstate', () => {
   if (quizActive) {
     history.pushState({ quiz: true }, '');
     alert('Finish the quiz first!');
@@ -608,7 +603,6 @@ tbody.addEventListener('focusin', (e) => {
 keypad.addEventListener('click', (e) => {
   const key = e.target.closest('.key');
   if (!key || !activeInput || activeInput.disabled) return;
-
   if (key.id === 'backspaceKey') {
     activeInput.value = activeInput.value.slice(0, -1);
   } else if (key.id === 'enterKey') {
@@ -618,6 +612,10 @@ keypad.addEventListener('click', (e) => {
   }
 });
 
+document.querySelectorAll('.op-btn').forEach(btn => {
+  btn.addEventListener('click', () => startQuiz(btn.dataset.op));
+});
+
 nameInput.addEventListener('change', saveSettings);
 maxNumInput.addEventListener('change', saveSettings);
 
@@ -625,8 +623,6 @@ loadHistory();
 loadSettings();
 renderHistory();
 
-startBtn.addEventListener('click', startQuiz);
-startBtnBottom.addEventListener('click', startQuiz);
 doneBtn.addEventListener('click', finishQuiz);
 doneBtnBottom.addEventListener('click', finishQuiz);
 </script>
