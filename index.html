@@ -165,11 +165,11 @@
 </div>
 
 <div class="controls">
+  <strong>Start:</strong>
   <button class="op-btn" data-op="+">+</button>
   <button class="op-btn" data-op="−">−</button>
   <button class="op-btn" data-op="×">×</button>
   <button class="op-btn" data-op="÷">÷</button>
-  <button id="doneBtn" disabled>Done</button>
   <span id="timer">Time: 0:00</span>
 </div>
 
@@ -208,10 +208,7 @@
 </div>
 
 <div class="bottom-controls">
-  <button class="op-btn" data-op="+">+</button>
-  <button class="op-btn" data-op="−">−</button>
-  <button class="op-btn" data-op="×">×</button>
-  <button class="op-btn" data-op="÷">÷</button>
+   
   <button id="doneBtnBottom" disabled>Done</button>
 </div>
 
@@ -237,7 +234,8 @@ let currentFlyout = null;
 let currentOp = '×';
 
 const tbody = document.getElementById('tbody');
-const doneBtn = document.getElementById('doneBtn');
+
+  
 const doneBtnBottom = document.getElementById('doneBtnBottom');
 const timerEl = document.getElementById('timer');
 const messageEl = document.getElementById('message');
@@ -629,7 +627,8 @@ loadHistory();
 loadSettings();
 renderHistory();
 
-doneBtn.addEventListener('click', finishQuiz);
+
+  
 doneBtnBottom.addEventListener('click', finishQuiz);
 </script>
 </body>
