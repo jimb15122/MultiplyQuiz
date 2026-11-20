@@ -28,7 +28,7 @@
     background: #fff;
   }
   button:hover { background: #eee; }
-  .op-btn { font-size: 1.2rem; font-weight: 600; min-width: 48px; }
+  .op-btn { font-size: 1.3rem; font-weight: 800; min-width: 48px; }
   #timer {
     display: inline-block;
     margin-left: 8px;
@@ -88,6 +88,13 @@
     font-size: 0.85rem;
   }
   #historyTable tbody tr { position: relative; }
+  
+    
+  #historyTable td:nth-child(2) {
+    font-size: 1.4rem;
+    font-weight: bold;
+  }
+
   #problemCount { font-size: 0.9rem; color: #555; margin-bottom: 8px; }
 
   #keypad {
@@ -149,6 +156,11 @@
   }
   .flyout button:hover { background: #f0f0f0; }
   .flyout .delete { color: #c0392b; }
+  
+  
+  
+
+  
 </style>
 </head>
 <body>
@@ -168,7 +180,7 @@
 <div class="controls">
   <strong>Start:</strong>
   <button class="op-btn" data-op="+">+</button>
-  <button class="op-btn" data-op="−">−</button>
+  <button class="op-btn" data-op="−">-</button>
   <button class="op-btn" data-op="×">×</button>
   <button class="op-btn" data-op="÷">÷</button>
   <span id="timer">Time: 0:00</span>
@@ -316,6 +328,7 @@ function formatTime(totalSeconds) {
 }
 
 function getSpeedRating(avgSeconds) {
+  if (avgSeconds < 3) return { emoji: "⚡️", text: "Lightning - Instant" };
   if (avgSeconds < 3.5) return { emoji: "🦅", text: "Eagle - Extreme Speed" };
   if (avgSeconds < 4.5) return { emoji: "🐆", text: "Cheetah - Very Fast" };
   if (avgSeconds < 5.5) return { emoji: "🐎", text: "Horse - Fast" };
@@ -380,12 +393,41 @@ function showFlyout(row, index) {
   }, 50);
 }
 
+
+
+
 function renderHistory() {
   if (history.length === 0) {
     historyContainer.innerHTML = '';
     return;
   }
+
+  // Find the best entry (highest score, then fastest time) for each operation type
+  const champions = {}; // type -> index in history
+
+  history.forEach((entry, index) => {
+    const type = entry.type || '×';
+    const currentChampIndex = champions[type];
+
+    // First time we see this type
+    if (currentChampIndex === undefined) {
+      champions[type] = index;
+      return;
+    }
+
+    const current = history[currentChampIndex];
+
+    const betterScore = entry.percentage > current.percentage;
+    const sameScoreFaster =
+      entry.percentage === current.percentage && entry.avg < current.avg;
+
+    if (betterScore || sameScoreFaster) {
+      champions[type] = index;
+    }
+  });
+
   const sorted = [...history].reverse();
+
   let html = `
     <h2 style="font-size:1.1rem; margin:16px 0 8px 0;">History</h2>
     <table id="historyTable">
@@ -394,29 +436,36 @@ function renderHistory() {
           <th>Name</th>
           <th>Type</th>
           <th>Score</th>
-          <th></th>
           <th>Time/Ans</th>
-          <th></th>
         </tr>
       </thead>
       <tbody>
   `;
+
   sorted.forEach((entry, displayIdx) => {
     const realIndex = history.length - 1 - displayIdx;
+    const type = entry.type || '×';
+
+    const isChampion = champions[type] === realIndex;
+    const nameDisplay = `${isChampion ? '🏆 ' : ''}${entry.name}`;
+
+    const scoreEmoji = getAccuracyRating(entry.percentage).emoji;
+    const timeEmoji = getSpeedRating(entry.avg).emoji;
+
     html += `
       <tr data-index="${realIndex}">
-        <td>${entry.name}</td>
-        <td>${entry.type || '×'}</td>
-        <td>${entry.percentage}%</td>
-        <td>${entry.scoreEmoji}</td>
-        <td>${entry.avg.toFixed(1)}s</td>
-        <td>${entry.timeEmoji}</td>
+        <td>${nameDisplay}</td>
+        <td><strong>${type}</strong></td>
+        <td>${entry.percentage}% ${scoreEmoji}</td>
+        <td>${entry.avg.toFixed(1)}s ${timeEmoji}</td>
       </tr>
     `;
   });
+
   html += `</tbody></table>`;
   historyContainer.innerHTML = html;
 
+  // Event listeners (unchanged)
   document.querySelectorAll('#historyTable tbody tr').forEach(row => {
     row.addEventListener('touchstart', () => {
       longPressTimer = setTimeout(() => {
@@ -424,18 +473,22 @@ function renderHistory() {
         showFlyout(row, index);
       }, 500);
     });
+
     row.addEventListener('touchend', () => clearTimeout(longPressTimer));
     row.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+
     row.addEventListener('mousedown', () => {
       longPressTimer = setTimeout(() => {
         const index = parseInt(row.dataset.index);
         showFlyout(row, index);
       }, 500);
     });
+
     row.addEventListener('mouseup', () => clearTimeout(longPressTimer));
     row.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
   });
 }
+
 
 function highlightRow(input) {
   document.querySelectorAll('.focused-row').forEach(row => row.classList.remove('focused-row'));
@@ -513,6 +566,7 @@ function startQuiz(op) {
   updateTimer();
 
   setButtonsEnabled(false, true);
+  doneBtnBottom.textContent = 'Quit';
   enterLockMode();
 
   const firstInput = document.querySelector('input.answer');
@@ -528,6 +582,23 @@ function updateTimer() {
   const elapsed = (performance.now() - startTime) / 1000;
   timerEl.textContent = `Time: ${formatTime(elapsed)}`;
 }
+
+function getEmptyAnswerCount() {
+  return Array.from(document.querySelectorAll('input.answer'))
+    .filter(input => input.value.trim() === '')
+    .length;
+}
+
+
+function updateDoneButtonText() {
+  const c = getEmptyAnswerCount();
+
+  //messageEl.textContent = `Empty answers: ${c}`;
+
+  doneBtnBottom.textContent =
+    c > 0 ? 'Quit' : 'Done';nn
+}
+
 
 function finishQuiz() {
   clearInterval(timerInterval);
@@ -575,6 +646,8 @@ function finishQuiz() {
     <div class="rating">Accuracy: ${accuracy.emoji} ${accuracy.text}</div>
   `;
 
+if (getEmptyAnswerCount() == 0)
+
   history.push({
     name: childName,
     type: currentOp,
@@ -614,6 +687,8 @@ keypad.addEventListener('click', (e) => {
   } else if (key.dataset.digit) {
     activeInput.value += key.dataset.digit;
   }
+  updateDoneButtonText();
+
 });
 
 document.querySelectorAll('.op-btn').forEach(btn => {
@@ -629,7 +704,7 @@ renderHistory();
 
 
   
-doneBtnBottom.addEventListener('click', advanceToNextEmpty);
+doneBtnBottom.addEventListener('click', finishQuiz);
 </script>
 </body>
 </html>
