@@ -338,7 +338,6 @@ function getAccuracyRating(percentage) {
 
 function setButtonsEnabled(startEnabled, doneEnabled) {
   document.querySelectorAll('.op-btn').forEach(btn => btn.disabled = !startEnabled);
-  doneBtn.disabled = !doneEnabled;
   doneBtnBottom.disabled = !doneEnabled;
 }
 
