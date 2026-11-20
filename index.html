@@ -306,8 +306,8 @@ function getSpeedRating(avgSeconds) {
   if (avgSeconds < 7) return { emoji: "🐕‍🦺", text: "Dog - Average" };
   if (avgSeconds < 8) return { emoji: "🦔", text: "Hedgehog - Below Average" };
   if (avgSeconds < 9) return { emoji: "🐢", text: "Turtle - Slow" };
-  if (avgSeconds < 10) return { emoji: "🦥", text: "Turtle - Slow" };
-  return { emoji: "🐌", text: "Snail - Very Slow" };
+  if (avgSeconds < 10) return { emoji: "🦥", text: "Sloth - Very Slow" };
+  return { emoji: "🐌", text: "Snail - Extremely Slow" };
 }
 
 function getAccuracyRating(percentage) {
