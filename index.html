@@ -124,12 +124,19 @@
 
   #problemCount { font-size: 0.9rem; color: #555; margin-bottom: 8px; }
 
-  #keypad {
+#keypad {
+  
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 900px;
+  box-sizing: border-box;
+ 
     display: none;
     position: fixed;
     bottom: 0;
-    left: 0;
-    right: 0;
+    xxleft: 0;
+    xxright: 0;
     background: #f0f3f6;
     border-top: 1px solid #ccc;
     padding: 10px 8px 12px 8px;
@@ -137,6 +144,9 @@
     box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
     user-select: none;
   }
+
+
+  
   #keypad.active { display: block; }
   .keypad-row {
     display: flex;
@@ -191,6 +201,7 @@
 </style>
 </head>
 <body>
+  <div id="app">
 <h1><img src="favicon.png" alt="" 
       style="height:1.2em; 
       vertical-align:middle; 
@@ -819,9 +830,10 @@ loadHistory();
 loadSettings();
 renderHistory();
 
+nameInput.focus();
 
   
 doneBtnBottom.addEventListener('click', finishQuiz);
 </script>
-</body>
+  </div></body>
 </html>
