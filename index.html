@@ -530,6 +530,9 @@ function renderHistory() {
     row.addEventListener('mouseup', () => clearTimeout(longPressTimer));
     row.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
   });
+
+  nameInput.focus();
+
 }
 
 
