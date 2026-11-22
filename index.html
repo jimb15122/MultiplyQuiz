@@ -413,42 +413,135 @@ function buildNameList() {
 
 
   
+function generateUniqueCombos(min, max, count, requireBLeA = false) {
+
+  const range = max - min + 1;
+
+  // Total unique combos available.
+  //
+  // Normal:
+  //   range²
+  //
+  // b <= a:
+  //   triangular number
+  //   n(n+1)/2
+  const capacity = requireBLeA
+    ? (range * (range + 1)) / 2
+    : range * range;
+
+  count = Math.min(count, capacity);
+
+  const combos = [];
+  const used = new Set();
+
+  while (combos.length < count) {
+
+    const a = Math.floor(Math.random() * range) + min;
+    const b = Math.floor(Math.random() * range) + min;
+
+    if (requireBLeA && b > a)
+      continue;
+
+    const key = `${a},${b}`;
+
+    if (used.has(key))
+      continue;
+
+    used.add(key);
+
+    combos.push({ a, b });
+  }
+
+  return combos;
+}
+
+function buildProblems(combos, op) {
+
+  return combos.map(({ a, b }) => {
+
+    let display;
+    let answer;
+
+    switch (op) {
+
+      case '+':
+        display = `${a} + ${b}`;
+        answer = a + b;
+        break;
+
+      case '−':
+        display = `${a} − ${b}`;
+        answer = a - b;
+        break;
+
+      case '×':
+        display = `${a} × ${b}`;
+        answer = a * b;
+        break;
+
+      case '÷':
+        display = `${a * b} ÷ ${a}`;
+        answer = b;
+        break;
+
+      default:
+        throw new Error(`Unsupported operator: ${op}`);
+    }
+
+    return {
+      display,
+      answer
+    };
+  });
+}
+
 function generateUniqueProblems(max, op) {
-  const all = [];
-  for (let a = MIN; a <= max; a++) {
-    for (let b = MIN; b <= max; b++) {
-      let display, answer;
-      const rand = op === 'Mix' ? Math.random() : -1;
 
-if (op === '+' || (rand >= 0 && rand < 0.25)) {
-  display = `${a} + ${b}`;
-  answer = a + b;
-}
-else if (op === '−' || (rand >= 0.25 && rand < 0.50)) {
-  if (a < b) continue;
-  display = `${a} − ${b}`;
-  answer = a - b;
-}
-else if (op === '×' || (rand >= 0.50 && rand < 0.75)) {
-  display = `${a} × ${b}`;
-  answer = a * b;
-}
-else if (op === '÷' || (rand >= 0.75 && rand < 1.0)) {
-  const product = a * b;
-  display = `${product} ÷ ${a}`;
-  answer = b;
-}
-
-      all.push({ display, answer });
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
     }
   }
-  // Shuffle
-  for (let i = all.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [all[i], all[j]] = [all[j], all[i]];
+
+  // Single-op mode uses a one-item list.
+  // Mix mode uses all four operators.
+  const ops =
+    op === 'Mix'
+      ? ['+', '−', '×', '÷']
+      : [op];
+
+  // Target count per operator.
+  const count =
+    op === 'Mix'
+      ? Math.floor(TARGET_TOTAL / ops.length)
+      : TARGET_TOTAL;
+
+  const problems = [];
+
+  for (const currentOp of ops) {
+
+    const combos = generateUniqueCombos(
+      MIN,
+      max,
+      count,
+      currentOp === '−'
+    );
+
+    problems.push(
+      ...buildProblems(combos, currentOp)
+    );
   }
-  return all.slice(0, TARGET_TOTAL);
+
+  // Only Mix needs a final shuffle so
+  // the operators are interleaved.
+  if (op === 'Mix') {
+    shuffle(problems);
+  }
+
+  return problems;
 }
+
 
 function formatTime(totalSeconds) {
   const mins = Math.floor(totalSeconds / 60);
