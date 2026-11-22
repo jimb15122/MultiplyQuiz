@@ -74,6 +74,14 @@
 .name-box input[type="number"] {
   width: 60px;
 }
+#savedNames {
+  padding: 6px 8px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 140px;
+  max-width: 100%;
+}
 
   
   table {
@@ -213,10 +221,10 @@
   Math Practice</h1>
 
 <div class="name-box">
-  <label for="childName">Name:</label>
+  <label for="savedNames">Name:</label>
 
 <select id="savedNames">
-  <option value="">Select...</option>
+  <option value="">New Player...</option>
 </select>
 
 <input type="text" id="childName" placeholder="Enter name">
@@ -327,7 +335,7 @@ function loadSettings() {
     const saved = localStorage.getItem(SETTINGS_KEY);
     if (saved) {
       const settings = JSON.parse(saved);
-      if (settings.name) nameInput.value = settings.name;
+       
       if (settings.max) maxNumInput.value = settings.max;
     }
   } catch (e) {}
@@ -335,7 +343,7 @@ function loadSettings() {
 
 function saveSettings() {
   const settings = {
-    name: nameInput.value.trim(),
+     
     max: maxNumInput.value
   };
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
@@ -349,11 +357,23 @@ function buildNameList() {
   )].sort();
 
   savedNames.innerHTML =
-    '<option value="">Select...</option>' +
+    '<option value="">New Player...</option>' +
     names.map(name =>
       `<option value="${name}">${name}</option>`
     ).join('');
+
+  // select first player from history
+  if (names.length > 0) {
+    savedNames.value = names[0];
+    nameInput.value = names[0];
+    nameInput.style.display = 'none';
+  } else {
+    savedNames.value = '';
+    nameInput.value = '';
+    nameInput.style.display = '';
+  }
 }
+
 
   
 function generateUniqueProblems(max, op) {
@@ -623,6 +643,31 @@ function exitLockMode() {
 }
 
 function startQuiz(op) {
+
+
+// If a new player was entered, make it the selected player
+if (nameInput.style.display !== 'none') {
+  const enteredName = nameInput.value.trim();
+
+  if (enteredName) {
+    let option = [...savedNames.options]
+      .find(o => o.value === enteredName);
+
+    if (!option) {
+      option = document.createElement('option');
+      option.value = enteredName;
+      option.textContent = enteredName;
+      savedNames.appendChild(option);
+    }
+
+    savedNames.value = enteredName;
+    nameInput.value = enteredName;
+    nameInput.style.display = 'none';
+  }
+}
+
+
+  
   clearInterval(timerInterval);
   messageEl.textContent = '';
   answers = [];
@@ -805,12 +850,20 @@ document.querySelectorAll('.op-btn').forEach(btn => {
 
 
 savedNames.addEventListener('change', () => {
-  if (savedNames.value) {
+  if (savedNames.value === '') {
+    nameInput.style.display = '';
+    nameInput.value = '';
+    nameInput.focus();
+  } else {
     nameInput.value = savedNames.value;
-    saveSettings();
+    nameInput.style.display = 'none';
   }
 });
+
+
+
   
+
 
 document.addEventListener('keydown', (e) => {
 
