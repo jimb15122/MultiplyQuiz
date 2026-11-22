@@ -214,7 +214,9 @@
 
 <div class="name-box">
   <label for="childName">Name:</label>
-  <input type="text" id="childName" placeholder="Enter name">
+  <input type="text" id="childName" list="nameList" placeholder="Enter name">
+<datalist id="nameList"></datalist>
+
   <div class="line-break"></div>
   <label for="maxNum">Max Value:</label>
   <input type="number" id="maxNum" value="12" min="2" max="20">
@@ -333,6 +335,21 @@ function saveSettings() {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
+function buildNameList() {
+  const datalist = document.getElementById('nameList');
+
+  const names = [...new Set(
+    history
+      .map(h => (h.name || '').trim())
+      .filter(Boolean)
+  )].sort();
+
+  datalist.innerHTML = names
+    .map(name => `<option value="${name}">`)
+    .join('');
+}
+
+  
 function generateUniqueProblems(max, op) {
   const all = [];
   for (let a = MIN; a <= max; a++) {
@@ -444,6 +461,8 @@ function renderHistory() {
     historyContainer.innerHTML = '';
     return;
   }
+
+  buildNameList();
 
   // Find the best entry (highest score, then fastest time) for each operation type
   const champions = {}; // type -> index in history
@@ -836,7 +855,9 @@ maxNumInput.addEventListener('change', saveSettings);
 
 loadHistory();
 loadSettings();
+
 renderHistory();
+
 
 nameInput.focus();
 
