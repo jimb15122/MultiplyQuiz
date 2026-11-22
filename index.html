@@ -240,6 +240,7 @@
   <button class="op-btn" data-op="−">-</button>
   <button class="op-btn" data-op="×">×</button>
   <button class="op-btn" data-op="÷">÷</button>
+  <button class="op-btn" data-op="Mix">Mix</button>
   <span id="timer">Time: 0:00</span>
 </div>
 
@@ -383,21 +384,27 @@ function generateUniqueProblems(max, op) {
   for (let a = MIN; a <= max; a++) {
     for (let b = MIN; b <= max; b++) {
       let display, answer;
-      if (op === '+') {
-        display = `${a} + ${b}`;
-        answer = a + b;
-      } else if (op === '−') {
-        if (a < b) continue; // only non-negative results
-        display = `${a} − ${b}`;
-        answer = a - b;
-      } else if (op === '×') {
-        display = `${a} × ${b}`;
-        answer = a * b;
-      } else if (op === '÷') {
-        const product = a * b;
-        display = `${product} ÷ ${a}`;
-        answer = b;
-      }
+      const rand = op === 'Mix' ? Math.random() : -1;
+
+if (op === '+' || (rand >= 0 && rand < 0.25)) {
+  display = `${a} + ${b}`;
+  answer = a + b;
+}
+else if (op === '−' || (rand >= 0.25 && rand < 0.50)) {
+  if (a < b) continue;
+  display = `${a} − ${b}`;
+  answer = a - b;
+}
+else if (op === '×' || (rand >= 0.50 && rand < 0.75)) {
+  display = `${a} × ${b}`;
+  answer = a * b;
+}
+else if (op === '÷' || (rand >= 0.75 && rand < 1.0)) {
+  const product = a * b;
+  display = `${product} ÷ ${a}`;
+  answer = b;
+}
+
       all.push({ display, answer });
     }
   }
@@ -525,7 +532,7 @@ function renderHistory() {
       <thead>
         <tr>
           <th>Name</th>
-          <th>Type</th>
+          <th>Type/Max</th>
           <th>Score</th>
           <th>Time/Ans</th>
         </tr>
