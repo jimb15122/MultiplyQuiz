@@ -798,7 +798,7 @@ function finishQuiz() {
     <div><strong>${childName}</strong>'s Results</div>
     <div>Score: <strong>${correctCount}/${actualTotal} (${percentage}%)</strong> ${accuracy.emoji}</div>
     <div>Total time: <strong>${timeStr}</strong></div>
-    <div>Average time: <strong>${avgSeconds.toFixed(1)} seconds</strong> per problem ${speed.emoji}</div>
+    <div>Average time: <strong>${avgSeconds.toFixed(3)} seconds</strong> per problem ${speed.emoji}</div>
     <div class="rating">Speed: ${speed.emoji} ${speed.text}</div>
     <div class="rating">Accuracy: ${accuracy.emoji} ${accuracy.text}</div>
   `;
