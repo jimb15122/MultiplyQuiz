@@ -354,7 +354,7 @@ function buildNameList() {
     history
       .map(h => (h.name || '').trim())
       .filter(Boolean)
-  )].sort();
+  )].sort((a, b) => a.localeCompare(b));
 
   savedNames.innerHTML =
     '<option value="">New Player...</option>' +
@@ -362,11 +362,13 @@ function buildNameList() {
       `<option value="${name}">${name}</option>`
     ).join('');
 
-  // select first player from history
-  if (names.length > 0) {
-    savedNames.value = names[0];
-    nameInput.value = names[0];
-    nameInput.style.display = 'none';
+  // Current player is always the player from the most recent game
+  if (history.length > 0) {
+    const currentPlayer = history[history.length - 1].name;
+
+    savedNames.value = currentPlayer;   // select in dropdown
+    nameInput.value = currentPlayer;    // keep hidden field in sync
+    nameInput.style.display = 'none';   // hide text box
   } else {
     savedNames.value = '';
     nameInput.value = '';
@@ -489,6 +491,7 @@ function renderHistory() {
   }
 
   buildNameList();
+  
 
   // Find the best entry (highest score, then fastest time) for each operation type
   const champions = {}; // type -> index in history
@@ -926,7 +929,7 @@ loadSettings();
 renderHistory();
 
 
-nameInput.focus();
+//nameInput.focus();
 
   
 doneBtnBottom.addEventListener('click', finishQuiz);
