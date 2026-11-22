@@ -214,8 +214,12 @@
 
 <div class="name-box">
   <label for="childName">Name:</label>
-  <input type="text" id="childName" list="nameList" placeholder="Enter name">
-<datalist id="nameList"></datalist>
+
+<select id="savedNames">
+  <option value="">Select...</option>
+</select>
+
+<input type="text" id="childName" placeholder="Enter name">
 
   <div class="line-break"></div>
   <label for="maxNum">Max Value:</label>
@@ -302,7 +306,9 @@ const maxNumInput = document.getElementById('maxNum');
 const historyContainer = document.getElementById('historyContainer');
 const problemCountEl = document.getElementById('problemCount');
 const keypad = document.getElementById('keypad');
+const savedNames = document.getElementById('savedNames');
 
+  
 function loadHistory() {
   try {
     const saved = localStorage.getItem(HISTORY_KEY);
@@ -336,17 +342,17 @@ function saveSettings() {
 }
 
 function buildNameList() {
-  const datalist = document.getElementById('nameList');
-
   const names = [...new Set(
     history
       .map(h => (h.name || '').trim())
       .filter(Boolean)
   )].sort();
 
-  datalist.innerHTML = names
-    .map(name => `<option value="${name}">`)
-    .join('');
+  savedNames.innerHTML =
+    '<option value="">Select...</option>' +
+    names.map(name =>
+      `<option value="${name}">${name}</option>`
+    ).join('');
 }
 
   
@@ -797,6 +803,14 @@ document.querySelectorAll('.op-btn').forEach(btn => {
   btn.addEventListener('click', () => startQuiz(btn.dataset.op));
 });
 
+
+savedNames.addEventListener('change', () => {
+  if (savedNames.value) {
+    nameInput.value = savedNames.value;
+    saveSettings();
+  }
+});
+  
 
 document.addEventListener('keydown', (e) => {
 
