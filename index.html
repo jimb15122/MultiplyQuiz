@@ -18,6 +18,30 @@
   h1 { font-size: 1.25rem; margin: 0 0 10px 0; }
   .controls, .bottom-controls { margin-bottom: 12px; }
   .bottom-controls { margin-top: 16px; }
+  
+  .start-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.start-row strong {
+  flex: 0 0 auto;
+}
+
+.op-btn {
+  flex: 1;
+  min-width: 50px;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.timer-row {
+  margin-top: 6px;
+}
+
+  
+  
   button {
     padding: 8px 14px;
     font-size: 1rem;
@@ -28,7 +52,7 @@
     background: #fff;
   }
   button:hover { background: #eee; }
-  .op-btn { font-size: 1.3rem; font-weight: 800; min-width: 48px; }
+  
   #timer {
     display: inline-block;
     margin-left: 8px;
@@ -235,13 +259,18 @@
 </div>
 
 <div class="controls">
-  <strong>Start:</strong>
-  <button class="op-btn" data-op="+">+</button>
-  <button class="op-btn" data-op="−">-</button>
-  <button class="op-btn" data-op="×">×</button>
-  <button class="op-btn" data-op="÷">÷</button>
-  <button class="op-btn" data-op="Mix">Mix</button>
-  <span id="timer">Time: 0:00</span>
+  <div class="start-row">
+    <strong>Start:</strong>
+    <button class="op-btn" data-op="+">+</button>
+    <button class="op-btn" data-op="−">-</button>
+    <button class="op-btn" data-op="×">×</button>
+    <button class="op-btn" data-op="÷">÷</button>
+    <button class="op-btn" data-op="Mix">Mix</button>
+  </div>
+
+  <div class="timer-row">
+    <span id="timer">Time: 0:00</span>
+  </div>
 </div>
 
 <div id="problemCount"></div>
