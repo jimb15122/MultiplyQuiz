@@ -7,14 +7,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Math Practice</title>
   <style>
+    /* Base page styling */
     body
     {
       font-family: system-ui, Arial, sans-serif;
       margin: 8px;
       background: #f5f7fa;
-      padding-bottom: 180px;
+      padding-bottom: 180px;          /* room for the fixed keypad */
       -webkit-user-select: none;
-      user-select: none;
+      user-select: none;              /* prevent accidental text selection on mobile */
     }
 
     h1
@@ -34,6 +35,7 @@
       margin-top: 16px;
     }
 
+    /* Operator start buttons row */
     .start-row
     {
       display: flex;
@@ -62,6 +64,7 @@
       margin-top: 6px;
     }
 
+    /* Generic button styling */
     button
     {
       padding: 8px 14px;
@@ -92,6 +95,7 @@
       margin: 0 auto;
     }
 
+    /* Name + max-value controls */
     .name-box
     {
       margin-bottom: 12px;
@@ -142,6 +146,7 @@
       max-width: 100%;
     }
 
+    /* Quiz table */
     table
     {
       border-collapse: collapse;
@@ -224,6 +229,7 @@
       font-weight: 600;
     }
 
+    /* History table */
     #historyTable
     {
       font-size: 0.9rem;
@@ -255,6 +261,7 @@
       margin-bottom: 8px;
     }
 
+    /* Fixed bottom numeric keypad (shown only while quiz is active) */
     #keypad
     {
       left: 50%;
@@ -314,6 +321,7 @@
       font-size: 1.3rem;
     }
 
+    /* Long-press flyout menu for deleting history entries */
     .flyout
     {
       position: absolute;
@@ -423,23 +431,26 @@
     <div id="historyContainer"></div>
 
     <script>
-      const TARGET_TOTAL = 24;
-      const MIN = 2;
-      const HISTORY_KEY = 'multiplicationHistory';
+      // ========== Constants ==========
+      const TARGET_TOTAL = 24;                     // Ideal number of problems per quiz
+      const MIN = 2;                               // Smallest number used in problems
+      const HISTORY_KEY = 'multiplicationHistory'; // localStorage key for past results
       const SETTINGS_KEY = 'multiplicationSettings';
 
+      // ========== State ==========
       let startTime = null;
       let timerInterval = null;
-      let answers = [];
-      let history = [];
-      let actualTotal = 0;
-      let activeInput = null;
+      let answers = [];                            // Correct answers for the current quiz
+      let history = [];                            // Array of past quiz results
+      let actualTotal = 0;                         // Real number of problems generated
+      let activeInput = null;                      // Currently focused answer input
       let quizActive = false;
-      let wakeLock = null;
+      let wakeLock = null;                         // Screen Wake Lock API handle
       let longPressTimer = null;
       let currentFlyout = null;
-      let currentOp = '×';
+      let currentOp = '×';                         // Operator used for the current quiz
 
+      // ========== DOM references ==========
       const tbody = document.getElementById('tbody');
       const doneBtnBottom = document.getElementById('doneBtnBottom');
       const timerEl = document.getElementById('timer');
@@ -451,6 +462,7 @@
       const keypad = document.getElementById('keypad');
       const savedNames = document.getElementById('savedNames');
 
+      // ========== Persistence ==========
       function loadHistory()
       {
         try
@@ -492,6 +504,7 @@
         localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
       }
 
+      // Rebuild the "saved names" dropdown from history
       function buildNameList()
       {
         const names = [...new Set(
@@ -522,13 +535,16 @@
         }
       }
 
+      // ========== Problem generation ==========
+      // Generates unique (a, b) pairs in the range [min, max].
+      // When requireBLeA is true (used for subtraction), only pairs where b <= a are kept.
       function generateUniqueCombos(min, max, count, requireBLeA = false)
       {
         const range = max - min + 1;
 
-        // Total unique combos available.
-        // Normal: range²
-        // b <= a: triangular number n(n+1)/2
+        // Capacity calculation:
+        // - normal: range²
+        // - b <= a: triangular number n(n+1)/2
         const capacity = requireBLeA
           ? (range * (range + 1)) / 2
           : range * range;
@@ -562,6 +578,7 @@
         return combos;
       }
 
+      // Turns (a, b) pairs into display strings + correct answers for a given operator
       function buildProblems(combos, op)
       {
         return combos.map(({ a, b }) =>
@@ -587,6 +604,7 @@
               break;
 
             case '÷':
+              // Always produce integer division: (a*b) ÷ a = b
               display = `${a * b} ÷ ${a}`;
               answer = b;
               break;
@@ -595,14 +613,19 @@
               throw new Error(`Unsupported operator: ${op}`);
           }
 
-          return
+          // IMPORTANT: Do not put a line break between "return" and "{"
+          // or Automatic Semicolon Insertion will turn it into "return;"
+          // and the problems will be undefined.
+          const result =
           {
             display,
             answer
           };
+          return result;
         });
       }
 
+      // High-level problem generator. Handles both single-op and "Mix" mode.
       function generateUniqueProblems(max, op)
       {
         function shuffle(arr)
@@ -620,7 +643,7 @@
           ? ['+', '−', '×', '÷']
           : [op];
 
-        // Target count per operator.
+        // Target count per operator
         const count = op === 'Mix'
           ? Math.floor(TARGET_TOTAL / ops.length)
           : TARGET_TOTAL;
@@ -633,7 +656,7 @@
             MIN,
             max,
             count,
-            currentOp === '−'
+            currentOp === '−'   // only subtraction needs b <= a
           );
 
           problems.push(
@@ -641,7 +664,7 @@
           );
         }
 
-        // Only Mix needs a final shuffle so the operators are interleaved.
+        // Only Mix needs a final shuffle so the operators are interleaved
         if (op === 'Mix')
         {
           shuffle(problems);
@@ -650,6 +673,7 @@
         return problems;
       }
 
+      // ========== Ratings & formatting ==========
       function formatTime(totalSeconds)
       {
         const mins = Math.floor(totalSeconds / 60);
@@ -681,6 +705,7 @@
         return { emoji: "😒", text: "Very Poor" };
       }
 
+      // ========== UI helpers ==========
       function setButtonsEnabled(startEnabled, doneEnabled)
       {
         document.querySelectorAll('.op-btn').forEach(btn => btn.disabled = !startEnabled);
@@ -696,6 +721,7 @@
         }
       }
 
+      // Shows a small "Delete" menu when a history row is long-pressed
       function showFlyout(row, index)
       {
         hideFlyout();
@@ -721,6 +747,7 @@
 
         currentFlyout = flyout;
 
+        // Auto-close when the user taps/clicks elsewhere
         setTimeout(() =>
         {
           const closer = (ev) =>
@@ -732,6 +759,7 @@
         }, 50);
       }
 
+      // Renders the history table (newest first) and highlights champions
       function renderHistory()
       {
         if (history.length === 0)
@@ -750,7 +778,6 @@
           const type = entry.type || '×';
           const currentChampIndex = champions[type];
 
-          // First time we see this type
           if (currentChampIndex === undefined)
           {
             champions[type] = index;
@@ -809,7 +836,7 @@
         html += `</tbody></table>`;
         historyContainer.innerHTML = html;
 
-        // Event listeners
+        // Long-press (touch or mouse) to delete an entry
         document.querySelectorAll('#historyTable tbody tr').forEach(row =>
         {
           row.addEventListener('touchstart', () =>
@@ -852,6 +879,7 @@
         if (row) row.classList.add('focused-row');
       }
 
+      // Moves focus to the next empty answer field (or finishes the quiz)
       function advanceToNextEmpty()
       {
         const inputs = Array.from(
@@ -885,6 +913,7 @@
         }
       }
 
+      // ========== Lock / fullscreen / wake lock ==========
       async function enterLockMode()
       {
         quizActive = true;
@@ -917,6 +946,7 @@
         }
       }
 
+      // ========== Quiz lifecycle ==========
       function startQuiz(op)
       {
         // If a new player was entered, make it the selected player
@@ -1010,6 +1040,7 @@
         doneBtnBottom.textContent = c > 0 ? 'Quit' : 'Done';
       }
 
+      // Handles both physical keyboard and on-screen keypad input
       function processAnswerKey(key)
       {
         if (!activeInput || activeInput.disabled) return;
@@ -1034,6 +1065,7 @@
         updateDoneButtonText();
       }
 
+      // Grades the quiz, shows results, and (if completed) saves to history
       function finishQuiz()
       {
         clearInterval(timerInterval);
@@ -1085,6 +1117,7 @@
           <div class="rating">Accuracy: ${accuracy.emoji} ${accuracy.text}</div>
         `;
 
+        // Only record completed quizzes (no empty answers)
         if (getEmptyAnswerCount() == 0)
         {
           history.push(
@@ -1103,6 +1136,8 @@
         setButtonsEnabled(true, false);
       }
 
+      // ========== Event listeners ==========
+      // Prevent back-button from leaving the quiz
       window.addEventListener('popstate', () =>
       {
         if (quizActive)
@@ -1112,6 +1147,7 @@
         }
       });
 
+      // When an answer field receives focus, clear it and highlight its row
       tbody.addEventListener('focusin', (e) =>
       {
         if (e.target.classList.contains('answer') && !e.target.disabled)
@@ -1122,6 +1158,7 @@
         }
       });
 
+      // On-screen keypad clicks
       keypad.addEventListener('click', (e) =>
       {
         const key = e.target.closest('.key');
@@ -1141,11 +1178,13 @@
         }
       });
 
+      // Operator start buttons
       document.querySelectorAll('.op-btn').forEach(btn =>
       {
         btn.addEventListener('click', () => startQuiz(btn.dataset.op));
       });
 
+      // Name dropdown behavior
       savedNames.addEventListener('change', () =>
       {
         if (savedNames.value === '')
@@ -1161,6 +1200,7 @@
         }
       });
 
+      // Keyboard handling (digits + shortcuts)
       document.addEventListener('keydown', (e) =>
       {
         // Quiz in progress
@@ -1188,7 +1228,7 @@
           return;
         }
 
-        // No quiz active - allow keyboard shortcuts to start quizzes
+        // No quiz active — keyboard shortcuts to start quizzes
         switch (e.key)
         {
           case '+':
@@ -1218,6 +1258,7 @@
       nameInput.addEventListener('change', saveSettings);
       maxNumInput.addEventListener('change', saveSettings);
 
+      // ========== Startup ==========
       loadHistory();
       loadSettings();
       renderHistory();
