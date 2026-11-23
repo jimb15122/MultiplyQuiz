@@ -172,6 +172,15 @@
       font-size: 1.1rem;
     }
 
+    /* Make only the operators larger (digits stay normal size) */
+    .problem .op
+    {
+      font-size: 1.7rem;
+      font-weight: 800;
+      vertical-align: -0.1em;
+      padding: 0 0.15em;
+    }
+
     input.answer
     {
       width: 100%;
@@ -363,7 +372,7 @@
       </select>
       <input type="text" id="childName" placeholder="Enter name">
       <div class="line-break"></div>
-      <label for="maxNum">Max Problem Value:</label>
+      <label for="maxNum">Max Value:</label>
       <select id="maxNum">
         <option value="5">5</option>
         <option value="10">10</option>
@@ -460,6 +469,7 @@
       const problemCountEl = document.getElementById('problemCount');
       const keypad = document.getElementById('keypad');
       const savedNames = document.getElementById('savedNames');
+      const startRow = document.querySelector('.start-row');   // the "Start:" button row
 
       // ========== Persistence ==========
       function loadHistory()
@@ -577,7 +587,8 @@
         return combos;
       }
 
-      // Turns (a, b) pairs into display strings + correct answers for a given operator
+      // Turns (a, b) pairs into display strings + correct answers for a given operator.
+      // Operators are wrapped in <span class="op"> so they can be styled larger than the digits.
       function buildProblems(combos, op)
       {
         return combos.map(({ a, b }) =>
@@ -588,23 +599,23 @@
           switch (op)
           {
             case '+':
-              display = `${a} + ${b}`;
+              display = `${a} <span class="op">+</span> ${b}`;
               answer = a + b;
               break;
 
             case '−':
-              display = `${a} − ${b}`;
+              display = `${a} <span class="op">−</span> ${b}`;
               answer = a - b;
               break;
 
             case '×':
-              display = `${a} × ${b}`;
+              display = `${a} <span class="op">×</span> ${b}`;
               answer = a * b;
               break;
 
             case '÷':
               // Always produce integer division: (a*b) ÷ a = b
-              display = `${a * b} ÷ ${a}`;
+              display = `${a * b} <span class="op">÷</span> ${a}`;
               answer = b;
               break;
 
@@ -979,6 +990,9 @@
         currentOp = op;
         saveSettings();
 
+        // Hide the Start: button row while the quiz is running
+        if (startRow) startRow.style.display = 'none';
+
         // Max value now comes directly from the dropdown (5–100)
         const max = parseInt(maxNumInput.value) || 12;
         const uniqueProblems = generateUniqueProblems(max, op);
@@ -1071,6 +1085,9 @@
         clearInterval(timerInterval);
         keypad.classList.remove('active');
         exitLockMode();
+
+        // Show the Start: button row again when the quiz ends
+        if (startRow) startRow.style.display = '';
 
         const totalSeconds = (performance.now() - startTime) / 1000;
         const avgSeconds = totalSeconds / actualTotal || 1;
