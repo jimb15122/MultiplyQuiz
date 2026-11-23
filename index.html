@@ -116,27 +116,18 @@
       font-weight: 600;
     }
 
-    .name-box input[type="text"],
-    .name-box input[type="number"]
-    {
-      padding: 6px 8px;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-
     .name-box input[type="text"]
     {
+      padding: 6px 8px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
       width: 140px;
       max-width: 100%;
     }
 
-    .name-box input[type="number"]
-    {
-      width: 60px;
-    }
-
-    #savedNames
+    /* Shared styling for both Name and Max Value dropdowns */
+    .name-box select
     {
       padding: 6px 8px;
       font-size: 1rem;
@@ -144,6 +135,7 @@
       border-radius: 4px;
       width: 140px;
       max-width: 100%;
+      background: #fff;
     }
 
     /* Quiz table */
@@ -372,7 +364,14 @@
       <input type="text" id="childName" placeholder="Enter name">
       <div class="line-break"></div>
       <label for="maxNum">Max Value:</label>
-      <input type="number" id="maxNum" value="12" min="2" max="20">
+      <select id="maxNum">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="12" selected>12</option>
+        <option value="24">24</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
     </div>
 
     <div class="controls">
@@ -456,7 +455,7 @@
       const timerEl = document.getElementById('timer');
       const messageEl = document.getElementById('message');
       const nameInput = document.getElementById('childName');
-      const maxNumInput = document.getElementById('maxNum');
+      const maxNumInput = document.getElementById('maxNum');   // now a <select>
       const historyContainer = document.getElementById('historyContainer');
       const problemCountEl = document.getElementById('problemCount');
       const keypad = document.getElementById('keypad');
@@ -980,7 +979,8 @@
         currentOp = op;
         saveSettings();
 
-        const max = Math.max(2, Math.min(20, parseInt(maxNumInput.value) || 12));
+        // Max value now comes directly from the dropdown (5–100)
+        const max = parseInt(maxNumInput.value) || 12;
         const uniqueProblems = generateUniqueProblems(max, op);
 
         actualTotal = uniqueProblems.length;
