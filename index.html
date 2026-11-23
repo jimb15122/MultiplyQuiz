@@ -1,1072 +1,1229 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="apple-touch-icon" href="favicon.png">
-<link rel="icon" href="favicon.png" type="image/png">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Math Practice</title>
-<style>
-  body {
-    font-family: system-ui, Arial, sans-serif;
-    margin: 8px;
-    background: #f5f7fa;
-    padding-bottom: 180px;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-  h1 { font-size: 1.25rem; margin: 0 0 10px 0; }
-  .controls, .bottom-controls { margin-bottom: 12px; }
-  .bottom-controls { margin-top: 16px; }
-  
-  .start-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
+  <link rel="apple-touch-icon" href="favicon.png">
+  <link rel="icon" href="favicon.png" type="image/png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Math Practice</title>
+  <style>
+    body
+    {
+      font-family: system-ui, Arial, sans-serif;
+      margin: 8px;
+      background: #f5f7fa;
+      padding-bottom: 180px;
+      -webkit-user-select: none;
+      user-select: none;
+    }
 
-.start-row strong {
-  flex: 0 0 auto;
-}
+    h1
+    {
+      font-size: 1.25rem;
+      margin: 0 0 10px 0;
+    }
 
-.op-btn {
-  flex: 1;
+    .controls,
+    .bottom-controls
+    {
+      margin-bottom: 12px;
+    }
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    .bottom-controls
+    {
+      margin-top: 16px;
+    }
 
-  font-size: 1.3rem;
-  font-weight: 800;
-  min-width: 50px;
-}
+    .start-row
+    {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
 
-.timer-row {
-  margin-top: 6px;
-}
+    .start-row strong
+    {
+      flex: 0 0 auto;
+    }
 
-  
-  
-  button {
-    padding: 8px 14px;
-    font-size: 1rem;
-    margin-right: 6px;
-    cursor: pointer;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background: #fff;
-  }
-  button:hover { background: #eee; }
-  
-  #timer {
-    display: inline-block;
-    margin-left: 8px;
-    font-weight: 600;
-    font-size: 0.95rem;
-  }
+    .op-btn
+    {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 800;
+      min-width: 50px;
+    }
 
-  #app {
-    max-width: 800px;
-    margin: 0 auto;
-  }
+    .timer-row
+    {
+      margin-top: 6px;
+    }
 
-  .name-box {
-  margin-bottom: 12px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
+    button
+    {
+      padding: 8px 14px;
+      font-size: 1rem;
+      margin-right: 6px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #fff;
+    }
 
-.name-box .line-break {
-  flex-basis: 100%;
-  height: 0;
-}
+    button:hover
+    {
+      background: #eee;
+    }
 
-.name-box label {
-  font-weight: 600;
-}
+    #timer
+    {
+      display: inline-block;
+      margin-left: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
 
-.name-box input[type="text"],
-.name-box input[type="number"] {
-  padding: 6px 8px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
+    #app
+    {
+      max-width: 800px;
+      margin: 0 auto;
+    }
 
-.name-box input[type="text"] {
-  width: 140px;
-  max-width: 100%;
-}
+    .name-box
+    {
+      margin-bottom: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
 
-.name-box input[type="number"] {
-  width: 60px;
-}
-#savedNames {
-  padding: 6px 8px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 140px;
-  max-width: 100%;
-}
+    .name-box .line-break
+    {
+      flex-basis: 100%;
+      height: 0;
+    }
 
-  
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    max-width: 100%;
-    background: white;
-    box-shadow: 0 1px 3px rgba(0,0,0,.08);
-    table-layout: fixed;
-    margin-bottom: 16px;
-  }
-  th, td {
-    border: 1px solid #d0d7de;
-    padding: 4px 3px;
-    text-align: center;
-    white-space: nowrap;
-    font-size: 0.95rem;
-  }
-  th { background: #f0f3f6; font-weight: 600; }
-  .problem { font-weight: 600; font-size: 1.1rem;}
-  input.answer {
-    width: 100%;
-    max-width: 70px;
-    padding: 6px 2px;
-    text-align: center;
-    font-size: 1.1rem;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    box-sizing: border-box;
-    -webkit-appearance: none;
-    background: transparent;
-  }
-  .emoji { font-size: 1.2rem; margin-left: 4px; }
-  .correct { background: #d4edda !important; color: #155724; }
-  .incorrect { background: #f8d7da !important; color: #721c24; }
-  .focused-row { background: #fff9c4 !important; }
-  #message { margin-top: 10px; font-size: 1rem; line-height: 1.5; }
-  .rating { font-weight: 600; }
-  #historyTable { font-size: 0.9rem; }
-  #historyTable th, #historyTable td { 
-    padding: 6px 2px; 
-    font-size: 0.85rem;
-  }
-  #historyTable tbody tr { position: relative; }
-  
-    
-  #historyTable td:nth-child(2) {
-    font-size: 1.4rem;
-    font-weight: bold;
-    color: #00f;
-  }
+    .name-box label
+    {
+      font-weight: 600;
+    }
 
-  #problemCount { font-size: 0.9rem; color: #555; margin-bottom: 8px; }
+    .name-box input[type="text"],
+    .name-box input[type="number"]
+    {
+      padding: 6px 8px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
 
-#keypad {
-  
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 900px;
-  box-sizing: border-box;
- 
-    display: none;
-    position: fixed;
-    bottom: 0;
-    xxleft: 0;
-    xxright: 0;
-    background: #f0f3f6;
-    border-top: 1px solid #ccc;
-    padding: 10px 8px 12px 8px;
-    z-index: 1000;
-    box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
-    user-select: none;
-  }
+    .name-box input[type="text"]
+    {
+      width: 140px;
+      max-width: 100%;
+    }
 
+    .name-box input[type="number"]
+    {
+      width: 60px;
+    }
 
-  
-  #keypad.active { display: block; }
-  .keypad-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-    justify-content: center;
-  }
-  .key {
-    flex: 1;
-    max-width: 70px;
-    height: 58px;
-    font-size: 1.8rem;
-    font-weight: 600;
-    border: 1px solid #bbb;
-    border-radius: 8px;
-    background: #fff;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .key:active { background: #e0e0e0; }
-  .key.wide { max-width: none; flex: 1; font-size: 1.3rem; }
+    #savedNames
+    {
+      padding: 6px 8px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 140px;
+      max-width: 100%;
+    }
 
-  .flyout {
-    position: absolute;
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    z-index: 2000;
-    padding: 4px 0;
-    min-width: 100px;
-  }
-  .flyout button {
-    display: block;
-    width: 100%;
-    text-align: left;
-    padding: 8px 12px;
-    border: none;
-    background: none;
-    font-size: 0.95rem;
-    cursor: pointer;
-  }
-  .flyout button:hover { background: #f0f0f0; }
-  .flyout .delete { color: #c0392b; }
-  
-  
-  
+    table
+    {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 100%;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+      table-layout: fixed;
+      margin-bottom: 16px;
+    }
 
-  
-</style>
+    th,
+    td
+    {
+      border: 1px solid #d0d7de;
+      padding: 4px 3px;
+      text-align: center;
+      white-space: nowrap;
+      font-size: 0.95rem;
+    }
+
+    th
+    {
+      background: #f0f3f6;
+      font-weight: 600;
+    }
+
+    .problem
+    {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    input.answer
+    {
+      width: 100%;
+      max-width: 70px;
+      padding: 6px 2px;
+      text-align: center;
+      font-size: 1.1rem;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      box-sizing: border-box;
+      -webkit-appearance: none;
+      background: transparent;
+    }
+
+    .emoji
+    {
+      font-size: 1.2rem;
+      margin-left: 4px;
+    }
+
+    .correct
+    {
+      background: #d4edda !important;
+      color: #155724;
+    }
+
+    .incorrect
+    {
+      background: #f8d7da !important;
+      color: #721c24;
+    }
+
+    .focused-row
+    {
+      background: #fff9c4 !important;
+    }
+
+    #message
+    {
+      margin-top: 10px;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .rating
+    {
+      font-weight: 600;
+    }
+
+    #historyTable
+    {
+      font-size: 0.9rem;
+    }
+
+    #historyTable th,
+    #historyTable td
+    {
+      padding: 6px 2px;
+      font-size: 0.85rem;
+    }
+
+    #historyTable tbody tr
+    {
+      position: relative;
+    }
+
+    #historyTable td:nth-child(2)
+    {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #00f;
+    }
+
+    #problemCount
+    {
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 8px;
+    }
+
+    #keypad
+    {
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 900px;
+      box-sizing: border-box;
+      display: none;
+      position: fixed;
+      bottom: 0;
+      background: #f0f3f6;
+      border-top: 1px solid #ccc;
+      padding: 10px 8px 12px 8px;
+      z-index: 1000;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+      user-select: none;
+    }
+
+    #keypad.active
+    {
+      display: block;
+    }
+
+    .keypad-row
+    {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      justify-content: center;
+    }
+
+    .key
+    {
+      flex: 1;
+      max-width: 70px;
+      height: 58px;
+      font-size: 1.8rem;
+      font-weight: 600;
+      border: 1px solid #bbb;
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .key:active
+    {
+      background: #e0e0e0;
+    }
+
+    .key.wide
+    {
+      max-width: none;
+      flex: 1;
+      font-size: 1.3rem;
+    }
+
+    .flyout
+    {
+      position: absolute;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      z-index: 2000;
+      padding: 4px 0;
+      min-width: 100px;
+    }
+
+    .flyout button
+    {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 8px 12px;
+      border: none;
+      background: none;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    .flyout button:hover
+    {
+      background: #f0f0f0;
+    }
+
+    .flyout .delete
+    {
+      color: #c0392b;
+    }
+  </style>
 </head>
 <body>
   <div id="app">
-<h1><img src="favicon.png" alt="" 
-      style="height:1.2em; 
-      vertical-align:middle; 
-      margin-right:8px;">
-  Math Practice</h1>
-
-<div class="name-box">
-  <label for="savedNames">Name:</label>
-
-<select id="savedNames">
-  <option value="">New Player...</option>
-</select>
-
-<input type="text" id="childName" placeholder="Enter name">
-
-  <div class="line-break"></div>
-  <label for="maxNum">Max Value:</label>
-  <input type="number" id="maxNum" value="12" min="2" max="20">
-</div>
-
-<div class="controls">
-  <div class="start-row">
-    <strong>Start:</strong>
-    <button class="op-btn" data-op="+">+</button>
-    <button class="op-btn" data-op="−">-</button>
-    <button class="op-btn" data-op="×">×</button>
-    <button class="op-btn" data-op="÷">÷</button>
-    <button class="op-btn" data-op="Mix">Mix</button>
-  </div>
-
-  <div class="timer-row">
-    <span id="timer">Time: 0:00</span>
-  </div>
-</div>
-
-<div id="problemCount"></div>
-
-<table id="quizTable">
-  <thead>
-    <tr>
-      <th style="width: 10%;">#</th>
-      <th style="width: 40%;">Problem</th>
-      <th style="width: 50%;">Your Answer</th>
-    </tr>
-  </thead>
-  <tbody id="tbody"></tbody>
-</table>
-
-<div id="keypad">
-  <div class="keypad-row">
-    <div class="key" data-digit="1">1</div>
-    <div class="key" data-digit="2">2</div>
-    <div class="key" data-digit="3">3</div>
-    <div class="key" data-digit="4">4</div>
-    <div class="key" data-digit="5">5</div>
-  </div>
-  <div class="keypad-row">
-    <div class="key" data-digit="6">6</div>
-    <div class="key" data-digit="7">7</div>
-    <div class="key" data-digit="8">8</div>
-    <div class="key" data-digit="9">9</div>
-    <div class="key" data-digit="0">0</div>
-  </div>
-  <div class="keypad-row">
-    <div class="key wide" id="backspaceKey">⌫</div>
-    <div class="key wide" id="enterKey">Enter</div>
-  </div>
-</div>
-
-<div class="bottom-controls">
-   
-  <button id="doneBtnBottom" disabled>Done</button>
-</div>
-
-<div id="message"></div>
-<div id="historyContainer"></div>
-
-<script>
-const TARGET_TOTAL = 24;
-const MIN = 2;
-const HISTORY_KEY = 'multiplicationHistory';
-const SETTINGS_KEY = 'multiplicationSettings';
-
-let startTime = null;
-let timerInterval = null;
-let answers = [];
-let history = [];
-let actualTotal = 0;
-let activeInput = null;
-let quizActive = false;
-let wakeLock = null;
-let longPressTimer = null;
-let currentFlyout = null;
-let currentOp = '×';
-
-const tbody = document.getElementById('tbody');
-
-  
-const doneBtnBottom = document.getElementById('doneBtnBottom');
-const timerEl = document.getElementById('timer');
-const messageEl = document.getElementById('message');
-const nameInput = document.getElementById('childName');
-const maxNumInput = document.getElementById('maxNum');
-const historyContainer = document.getElementById('historyContainer');
-const problemCountEl = document.getElementById('problemCount');
-const keypad = document.getElementById('keypad');
-const savedNames = document.getElementById('savedNames');
-
-  
-function loadHistory() {
-  try {
-    const saved = localStorage.getItem(HISTORY_KEY);
-    history = saved ? JSON.parse(saved) : [];
-  } catch (e) {
-    history = [];
-  }
-}
-
-function saveHistory() {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-}
-
-function loadSettings() {
-  try {
-    const saved = localStorage.getItem(SETTINGS_KEY);
-    if (saved) {
-      const settings = JSON.parse(saved);
-       
-      if (settings.max) maxNumInput.value = settings.max;
-    }
-  } catch (e) {}
-}
-
-function saveSettings() {
-  const settings = {
-     
-    max: maxNumInput.value
-  };
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-}
-
-function buildNameList() {
-  const names = [...new Set(
-    history
-      .map(h => (h.name || '').trim())
-      .filter(Boolean)
-  )].sort((a, b) => a.localeCompare(b));
-
-  savedNames.innerHTML =
-    '<option value="">New Player...</option>' +
-    names.map(name =>
-      `<option value="${name}">${name}</option>`
-    ).join('');
-
-  // Current player is always the player from the most recent game
-  if (history.length > 0) {
-    const currentPlayer = history[history.length - 1].name;
-
-    savedNames.value = currentPlayer;   // select in dropdown
-    nameInput.value = currentPlayer;    // keep hidden field in sync
-    nameInput.style.display = 'none';   // hide text box
-  } else {
-    savedNames.value = '';
-    nameInput.value = '';
-    nameInput.style.display = '';
-  }
-}
-
-
-  
-function generateUniqueCombos(min, max, count, requireBLeA = false) {
-
-  const range = max - min + 1;
-
-  // Total unique combos available.
-  //
-  // Normal:
-  //   range²
-  //
-  // b <= a:
-  //   triangular number
-  //   n(n+1)/2
-  const capacity = requireBLeA
-    ? (range * (range + 1)) / 2
-    : range * range;
-
-  count = Math.min(count, capacity);
-
-  const combos = [];
-  const used = new Set();
-
-  while (combos.length < count) {
-
-    const a = Math.floor(Math.random() * range) + min;
-    const b = Math.floor(Math.random() * range) + min;
-
-    if (requireBLeA && b > a)
-      continue;
-
-    const key = `${a},${b}`;
-
-    if (used.has(key))
-      continue;
-
-    used.add(key);
-
-    combos.push({ a, b });
-  }
-
-  return combos;
-}
-
-function buildProblems(combos, op) {
-
-  return combos.map(({ a, b }) => {
-
-    let display;
-    let answer;
-
-    switch (op) {
-
-      case '+':
-        display = `${a} + ${b}`;
-        answer = a + b;
-        break;
-
-      case '−':
-        display = `${a} − ${b}`;
-        answer = a - b;
-        break;
-
-      case '×':
-        display = `${a} × ${b}`;
-        answer = a * b;
-        break;
-
-      case '÷':
-        display = `${a * b} ÷ ${a}`;
-        answer = b;
-        break;
-
-      default:
-        throw new Error(`Unsupported operator: ${op}`);
-    }
-
-    return {
-      display,
-      answer
-    };
-  });
-}
-
-function generateUniqueProblems(max, op) {
-
-  function shuffle(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-  }
-
-  // Single-op mode uses a one-item list.
-  // Mix mode uses all four operators.
-  const ops =
-    op === 'Mix'
-      ? ['+', '−', '×', '÷']
-      : [op];
-
-  // Target count per operator.
-  const count =
-    op === 'Mix'
-      ? Math.floor(TARGET_TOTAL / ops.length)
-      : TARGET_TOTAL;
-
-  const problems = [];
-
-  for (const currentOp of ops) {
-
-    const combos = generateUniqueCombos(
-      MIN,
-      max,
-      count,
-      currentOp === '−'
-    );
-
-    problems.push(
-      ...buildProblems(combos, currentOp)
-    );
-  }
-
-  // Only Mix needs a final shuffle so
-  // the operators are interleaved.
-  if (op === 'Mix') {
-    shuffle(problems);
-  }
-
-  return problems;
-}
-
-
-function formatTime(totalSeconds) {
-  const mins = Math.floor(totalSeconds / 60);
-  const secs = Math.floor(totalSeconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-function getSpeedRating(avgSeconds) {
-  if (avgSeconds < 3) return { emoji: "⚡️", text: "Lightning - Instant" };
-  if (avgSeconds < 3.5) return { emoji: "🦅", text: "Eagle - Extreme Speed" };
-  if (avgSeconds < 4.5) return { emoji: "🐆", text: "Cheetah - Very Fast" };
-  if (avgSeconds < 5.5) return { emoji: "🐎", text: "Horse - Fast" };
-  if (avgSeconds < 7) return { emoji: "🐕‍🦺", text: "Dog - Average" };
-  if (avgSeconds < 8) return { emoji: "🦔", text: "Hedgehog - Below Average" };
-  if (avgSeconds < 9) return { emoji: "🐢", text: "Turtle - Slow" };
-  if (avgSeconds < 10) return { emoji: "🦥", text: "Sloth - Very Slow" };
-  return { emoji: "🐌", text: "Snail - Extremely Slow" };
-}
-
-function getAccuracyRating(percentage) {
-  if (percentage === 100) return { emoji: "💯", text: "Perfect" };
-  if (percentage >= 96) return { emoji: "🎯", text: "Near Perfect" };
-  if (percentage >= 88) return { emoji: "😃", text: "Very Good" };
-  if (percentage >= 76) return { emoji: "🤓", text: "Good" };
-  if (percentage >= 64) return { emoji: "🙂", text: "Fair" };
-  if (percentage >= 48) return { emoji: "😕", text: "Poor" };
-  return { emoji: "😒", text: "Very Poor" };
-}
-
-function setButtonsEnabled(startEnabled, doneEnabled) {
-  document.querySelectorAll('.op-btn').forEach(btn => btn.disabled = !startEnabled);
-  doneBtnBottom.disabled = !doneEnabled;
-}
-
-function hideFlyout() {
-  if (currentFlyout) {
-    currentFlyout.remove();
-    currentFlyout = null;
-  }
-}
-
-function showFlyout(row, index) {
-  hideFlyout();
-  const flyout = document.createElement('div');
-  flyout.className = 'flyout';
-  flyout.innerHTML = `<button class="delete">Delete</button>`;
-  document.body.appendChild(flyout);
-
-  const rect = row.getBoundingClientRect();
-  flyout.style.left = (rect.left + 20) + 'px';
-  flyout.style.top = (rect.bottom + window.scrollY + 4) + 'px';
-
-  const deleteBtn = flyout.querySelector('.delete');
-  deleteBtn.onclick = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    history.splice(index, 1);
-    saveHistory();
-    renderHistory();
-    hideFlyout();
-  };
-
-  currentFlyout = flyout;
-
-  setTimeout(() => {
-    const closer = (ev) => {
-      if (!flyout.contains(ev.target)) hideFlyout();
-    };
-    document.addEventListener('click', closer, { once: true });
-    document.addEventListener('touchstart', closer, { once: true });
-  }, 50);
-}
-
-
-
-
-function renderHistory() {
-  if (history.length === 0) {
-    historyContainer.innerHTML = '';
-    return;
-  }
-
-  buildNameList();
-  
-
-  // Find the best entry (highest score, then fastest time) for each operation type
-  const champions = {}; // type -> index in history
-
-  history.forEach((entry, index) => {
-    const type = entry.type || '×';
-    const currentChampIndex = champions[type];
-
-    // First time we see this type
-    if (currentChampIndex === undefined) {
-      champions[type] = index;
-      return;
-    }
-
-    const current = history[currentChampIndex];
-
-    const betterScore = entry.percentage > current.percentage;
-    const sameScoreFaster =
-      entry.percentage === current.percentage && entry.avg < current.avg;
-
-    if (betterScore || sameScoreFaster) {
-      champions[type] = index;
-    }
-  });
-
-  const sorted = [...history].reverse();
-
-  let html = `
-    <h2 style="font-size:1.1rem; margin:16px 0 8px 0;">History</h2>
-    <table id="historyTable">
+    <h1>
+      <img src="favicon.png" alt="" style="height:1.2em; vertical-align:middle; margin-right:8px;">
+      Math Practice
+    </h1>
+
+    <div class="name-box">
+      <label for="savedNames">Name:</label>
+      <select id="savedNames">
+        <option value="">New Player...</option>
+      </select>
+      <input type="text" id="childName" placeholder="Enter name">
+      <div class="line-break"></div>
+      <label for="maxNum">Max Value:</label>
+      <input type="number" id="maxNum" value="12" min="2" max="20">
+    </div>
+
+    <div class="controls">
+      <div class="start-row">
+        <strong>Start:</strong>
+        <button class="op-btn" data-op="+">+</button>
+        <button class="op-btn" data-op="−">-</button>
+        <button class="op-btn" data-op="×">×</button>
+        <button class="op-btn" data-op="÷">÷</button>
+        <button class="op-btn" data-op="Mix">Mix</button>
+      </div>
+      <div class="timer-row">
+        <span id="timer">Time: 0:00</span>
+      </div>
+    </div>
+
+    <div id="problemCount"></div>
+
+    <table id="quizTable">
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Type/Max</th>
-          <th>Score</th>
-          <th>Time/Ans</th>
+          <th style="width: 10%;">#</th>
+          <th style="width: 40%;">Problem</th>
+          <th style="width: 50%;">Your Answer</th>
         </tr>
       </thead>
-      <tbody>
-  `;
+      <tbody id="tbody"></tbody>
+    </table>
 
-  sorted.forEach((entry, displayIdx) => {
-    const realIndex = history.length - 1 - displayIdx;
-    const type = entry.type || '×';
+    <div id="keypad">
+      <div class="keypad-row">
+        <div class="key" data-digit="1">1</div>
+        <div class="key" data-digit="2">2</div>
+        <div class="key" data-digit="3">3</div>
+        <div class="key" data-digit="4">4</div>
+        <div class="key" data-digit="5">5</div>
+      </div>
+      <div class="keypad-row">
+        <div class="key" data-digit="6">6</div>
+        <div class="key" data-digit="7">7</div>
+        <div class="key" data-digit="8">8</div>
+        <div class="key" data-digit="9">9</div>
+        <div class="key" data-digit="0">0</div>
+      </div>
+      <div class="keypad-row">
+        <div class="key wide" id="backspaceKey">⌫</div>
+        <div class="key wide" id="enterKey">Enter</div>
+      </div>
+    </div>
 
-    const isChampion = champions[type] === realIndex;
-    const nameDisplay = `${isChampion ? '🏆 ' : ''}${entry.name}`;
+    <div class="bottom-controls">
+      <button id="doneBtnBottom" disabled>Done</button>
+    </div>
 
-    const scoreEmoji = getAccuracyRating(entry.percentage).emoji;
-    const timeEmoji = getSpeedRating(entry.avg).emoji;
+    <div id="message"></div>
+    <div id="historyContainer"></div>
 
-    html += `
-      <tr data-index="${realIndex}">
-        <td>${nameDisplay}</td>
-        <td><strong>${type}</strong></td>
-        <td>${entry.percentage}% ${scoreEmoji}</td>
-        <td>${entry.avg.toFixed(3)}s ${timeEmoji}</td>
-      </tr>
-    `;
-  });
+    <script>
+      const TARGET_TOTAL = 24;
+      const MIN = 2;
+      const HISTORY_KEY = 'multiplicationHistory';
+      const SETTINGS_KEY = 'multiplicationSettings';
 
-  html += `</tbody></table>`;
-  historyContainer.innerHTML = html;
+      let startTime = null;
+      let timerInterval = null;
+      let answers = [];
+      let history = [];
+      let actualTotal = 0;
+      let activeInput = null;
+      let quizActive = false;
+      let wakeLock = null;
+      let longPressTimer = null;
+      let currentFlyout = null;
+      let currentOp = '×';
 
-  // Event listeners (unchanged)
-  document.querySelectorAll('#historyTable tbody tr').forEach(row => {
-    row.addEventListener('touchstart', () => {
-      longPressTimer = setTimeout(() => {
-        const index = parseInt(row.dataset.index);
-        showFlyout(row, index);
-      }, 500);
-    });
+      const tbody = document.getElementById('tbody');
+      const doneBtnBottom = document.getElementById('doneBtnBottom');
+      const timerEl = document.getElementById('timer');
+      const messageEl = document.getElementById('message');
+      const nameInput = document.getElementById('childName');
+      const maxNumInput = document.getElementById('maxNum');
+      const historyContainer = document.getElementById('historyContainer');
+      const problemCountEl = document.getElementById('problemCount');
+      const keypad = document.getElementById('keypad');
+      const savedNames = document.getElementById('savedNames');
 
-    row.addEventListener('touchend', () => clearTimeout(longPressTimer));
-    row.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+      function loadHistory()
+      {
+        try
+        {
+          const saved = localStorage.getItem(HISTORY_KEY);
+          history = saved ? JSON.parse(saved) : [];
+        }
+        catch (e)
+        {
+          history = [];
+        }
+      }
 
-    row.addEventListener('mousedown', () => {
-      longPressTimer = setTimeout(() => {
-        const index = parseInt(row.dataset.index);
-        showFlyout(row, index);
-      }, 500);
-    });
+      function saveHistory()
+      {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+      }
 
-    row.addEventListener('mouseup', () => clearTimeout(longPressTimer));
-    row.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
-  });
+      function loadSettings()
+      {
+        try
+        {
+          const saved = localStorage.getItem(SETTINGS_KEY);
+          if (saved)
+          {
+            const settings = JSON.parse(saved);
+            if (settings.max) maxNumInput.value = settings.max;
+          }
+        }
+        catch (e) {}
+      }
 
-  nameInput.focus();
-  nameInput.select();
+      function saveSettings()
+      {
+        const settings =
+        {
+          max: maxNumInput.value
+        };
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      }
 
-}
+      function buildNameList()
+      {
+        const names = [...new Set(
+          history
+            .map(h => (h.name || '').trim())
+            .filter(Boolean)
+        )].sort((a, b) => a.localeCompare(b));
 
+        savedNames.innerHTML =
+          '<option value="">New Player...</option>' +
+          names.map(name =>
+            `<option value="${name}">${name}</option>`
+          ).join('');
 
-function highlightRow(input) {
-  const current = document.querySelector('.focused-row');
-  if (current) current.classList.remove('focused-row');
+        // Current player is always the player from the most recent game
+        if (history.length > 0)
+        {
+          const currentPlayer = history[history.length - 1].name;
+          savedNames.value = currentPlayer;
+          nameInput.value = currentPlayer;
+          nameInput.style.display = 'none';
+        }
+        else
+        {
+          savedNames.value = '';
+          nameInput.value = '';
+          nameInput.style.display = '';
+        }
+      }
 
-  if (!input) return;
+      function generateUniqueCombos(min, max, count, requireBLeA = false)
+      {
+        const range = max - min + 1;
 
-  const row = input.closest('tr');
-  if (row) row.classList.add('focused-row');
-}
+        // Total unique combos available.
+        // Normal: range²
+        // b <= a: triangular number n(n+1)/2
+        const capacity = requireBLeA
+          ? (range * (range + 1)) / 2
+          : range * range;
 
+        count = Math.min(count, capacity);
 
-function advanceToNextEmpty() {
-  const inputs = Array.from(
-    document.querySelectorAll('input.answer:not([disabled])')
-  );
+        const combos = [];
+        const used = new Set();
 
-  const emptyInput = inputs.find(input => input.value.trim() === '');
+        while (combos.length < count)
+        {
+          const a = Math.floor(Math.random() * range) + min;
+          const b = Math.floor(Math.random() * range) + min;
 
-  if (emptyInput) {
-    activeInput = emptyInput;
+          if (requireBLeA && b > a)
+          {
+            continue;
+          }
 
-    requestAnimationFrame(() => {
-      highlightRow(emptyInput);
+          const key = `${a},${b}`;
 
-      // Prevent Safari/Chrome from auto-scrolling the page
-      emptyInput.focus({ preventScroll: true });
+          if (used.has(key))
+          {
+            continue;
+          }
 
-      // Do our own controlled scroll
-      emptyInput.closest('tr').scrollIntoView({
-        block: 'center',
-        behavior: 'instant'
+          used.add(key);
+          combos.push({ a, b });
+        }
+
+        return combos;
+      }
+
+      function buildProblems(combos, op)
+      {
+        return combos.map(({ a, b }) =>
+        {
+          let display;
+          let answer;
+
+          switch (op)
+          {
+            case '+':
+              display = `${a} + ${b}`;
+              answer = a + b;
+              break;
+
+            case '−':
+              display = `${a} − ${b}`;
+              answer = a - b;
+              break;
+
+            case '×':
+              display = `${a} × ${b}`;
+              answer = a * b;
+              break;
+
+            case '÷':
+              display = `${a * b} ÷ ${a}`;
+              answer = b;
+              break;
+
+            default:
+              throw new Error(`Unsupported operator: ${op}`);
+          }
+
+          return
+          {
+            display,
+            answer
+          };
+        });
+      }
+
+      function generateUniqueProblems(max, op)
+      {
+        function shuffle(arr)
+        {
+          for (let i = arr.length - 1; i > 0; i--)
+          {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+          }
+        }
+
+        // Single-op mode uses a one-item list.
+        // Mix mode uses all four operators.
+        const ops = op === 'Mix'
+          ? ['+', '−', '×', '÷']
+          : [op];
+
+        // Target count per operator.
+        const count = op === 'Mix'
+          ? Math.floor(TARGET_TOTAL / ops.length)
+          : TARGET_TOTAL;
+
+        const problems = [];
+
+        for (const currentOp of ops)
+        {
+          const combos = generateUniqueCombos(
+            MIN,
+            max,
+            count,
+            currentOp === '−'
+          );
+
+          problems.push(
+            ...buildProblems(combos, currentOp)
+          );
+        }
+
+        // Only Mix needs a final shuffle so the operators are interleaved.
+        if (op === 'Mix')
+        {
+          shuffle(problems);
+        }
+
+        return problems;
+      }
+
+      function formatTime(totalSeconds)
+      {
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = Math.floor(totalSeconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+      }
+
+      function getSpeedRating(avgSeconds)
+      {
+        if (avgSeconds < 3) return { emoji: "⚡️", text: "Lightning - Instant" };
+        if (avgSeconds < 3.5) return { emoji: "🦅", text: "Eagle - Extreme Speed" };
+        if (avgSeconds < 4.5) return { emoji: "🐆", text: "Cheetah - Very Fast" };
+        if (avgSeconds < 5.5) return { emoji: "🐎", text: "Horse - Fast" };
+        if (avgSeconds < 7) return { emoji: "🐕‍🦺", text: "Dog - Average" };
+        if (avgSeconds < 8) return { emoji: "🦔", text: "Hedgehog - Below Average" };
+        if (avgSeconds < 9) return { emoji: "🐢", text: "Turtle - Slow" };
+        if (avgSeconds < 10) return { emoji: "🦥", text: "Sloth - Very Slow" };
+        return { emoji: "🐌", text: "Snail - Extremely Slow" };
+      }
+
+      function getAccuracyRating(percentage)
+      {
+        if (percentage === 100) return { emoji: "💯", text: "Perfect" };
+        if (percentage >= 96) return { emoji: "🎯", text: "Near Perfect" };
+        if (percentage >= 88) return { emoji: "😃", text: "Very Good" };
+        if (percentage >= 76) return { emoji: "🤓", text: "Good" };
+        if (percentage >= 64) return { emoji: "🙂", text: "Fair" };
+        if (percentage >= 48) return { emoji: "😕", text: "Poor" };
+        return { emoji: "😒", text: "Very Poor" };
+      }
+
+      function setButtonsEnabled(startEnabled, doneEnabled)
+      {
+        document.querySelectorAll('.op-btn').forEach(btn => btn.disabled = !startEnabled);
+        doneBtnBottom.disabled = !doneEnabled;
+      }
+
+      function hideFlyout()
+      {
+        if (currentFlyout)
+        {
+          currentFlyout.remove();
+          currentFlyout = null;
+        }
+      }
+
+      function showFlyout(row, index)
+      {
+        hideFlyout();
+        const flyout = document.createElement('div');
+        flyout.className = 'flyout';
+        flyout.innerHTML = `<button class="delete">Delete</button>`;
+        document.body.appendChild(flyout);
+
+        const rect = row.getBoundingClientRect();
+        flyout.style.left = (rect.left + 20) + 'px';
+        flyout.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+
+        const deleteBtn = flyout.querySelector('.delete');
+        deleteBtn.onclick = (e) =>
+        {
+          e.stopPropagation();
+          e.preventDefault();
+          history.splice(index, 1);
+          saveHistory();
+          renderHistory();
+          hideFlyout();
+        };
+
+        currentFlyout = flyout;
+
+        setTimeout(() =>
+        {
+          const closer = (ev) =>
+          {
+            if (!flyout.contains(ev.target)) hideFlyout();
+          };
+          document.addEventListener('click', closer, { once: true });
+          document.addEventListener('touchstart', closer, { once: true });
+        }, 50);
+      }
+
+      function renderHistory()
+      {
+        if (history.length === 0)
+        {
+          historyContainer.innerHTML = '';
+          return;
+        }
+
+        buildNameList();
+
+        // Find the best entry (highest score, then fastest time) for each operation type
+        const champions = {}; // type -> index in history
+
+        history.forEach((entry, index) =>
+        {
+          const type = entry.type || '×';
+          const currentChampIndex = champions[type];
+
+          // First time we see this type
+          if (currentChampIndex === undefined)
+          {
+            champions[type] = index;
+            return;
+          }
+
+          const current = history[currentChampIndex];
+
+          const betterScore = entry.percentage > current.percentage;
+          const sameScoreFaster =
+            entry.percentage === current.percentage && entry.avg < current.avg;
+
+          if (betterScore || sameScoreFaster)
+          {
+            champions[type] = index;
+          }
+        });
+
+        const sorted = [...history].reverse();
+
+        let html = `
+          <h2 style="font-size:1.1rem; margin:16px 0 8px 0;">History</h2>
+          <table id="historyTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Type/Max</th>
+                <th>Score</th>
+                <th>Time/Ans</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        sorted.forEach((entry, displayIdx) =>
+        {
+          const realIndex = history.length - 1 - displayIdx;
+          const type = entry.type || '×';
+
+          const isChampion = champions[type] === realIndex;
+          const nameDisplay = `${isChampion ? '🏆 ' : ''}${entry.name}`;
+
+          const scoreEmoji = getAccuracyRating(entry.percentage).emoji;
+          const timeEmoji = getSpeedRating(entry.avg).emoji;
+
+          html += `
+            <tr data-index="${realIndex}">
+              <td>${nameDisplay}</td>
+              <td><strong>${type}</strong></td>
+              <td>${entry.percentage}% ${scoreEmoji}</td>
+              <td>${entry.avg.toFixed(3)}s ${timeEmoji}</td>
+            </tr>
+          `;
+        });
+
+        html += `</tbody></table>`;
+        historyContainer.innerHTML = html;
+
+        // Event listeners
+        document.querySelectorAll('#historyTable tbody tr').forEach(row =>
+        {
+          row.addEventListener('touchstart', () =>
+          {
+            longPressTimer = setTimeout(() =>
+            {
+              const index = parseInt(row.dataset.index);
+              showFlyout(row, index);
+            }, 500);
+          });
+
+          row.addEventListener('touchend', () => clearTimeout(longPressTimer));
+          row.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+
+          row.addEventListener('mousedown', () =>
+          {
+            longPressTimer = setTimeout(() =>
+            {
+              const index = parseInt(row.dataset.index);
+              showFlyout(row, index);
+            }, 500);
+          });
+
+          row.addEventListener('mouseup', () => clearTimeout(longPressTimer));
+          row.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
+        });
+
+        nameInput.focus();
+        nameInput.select();
+      }
+
+      function highlightRow(input)
+      {
+        const current = document.querySelector('.focused-row');
+        if (current) current.classList.remove('focused-row');
+
+        if (!input) return;
+
+        const row = input.closest('tr');
+        if (row) row.classList.add('focused-row');
+      }
+
+      function advanceToNextEmpty()
+      {
+        const inputs = Array.from(
+          document.querySelectorAll('input.answer:not([disabled])')
+        );
+
+        const emptyInput = inputs.find(input => input.value.trim() === '');
+
+        if (emptyInput)
+        {
+          activeInput = emptyInput;
+
+          requestAnimationFrame(() =>
+          {
+            highlightRow(emptyInput);
+
+            // Prevent Safari/Chrome from auto-scrolling the page
+            emptyInput.focus({ preventScroll: true });
+
+            // Do our own controlled scroll
+            emptyInput.closest('tr').scrollIntoView(
+            {
+              block: 'center',
+              behavior: 'instant'
+            });
+          });
+        }
+        else
+        {
+          finishQuiz();
+        }
+      }
+
+      async function enterLockMode()
+      {
+        quizActive = true;
+        history.pushState({ quiz: true }, '');
+        try
+        {
+          if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+          else if (document.documentElement.webkitRequestFullscreen) await document.documentElement.webkitRequestFullscreen();
+        }
+        catch (e) {}
+        try
+        {
+          if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+        }
+        catch (e) {}
+      }
+
+      function exitLockMode()
+      {
+        quizActive = false;
+        if (document.fullscreenElement || document.webkitFullscreenElement)
+        {
+          if (document.exitFullscreen) document.exitFullscreen();
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        }
+        if (wakeLock)
+        {
+          wakeLock.release();
+          wakeLock = null;
+        }
+      }
+
+      function startQuiz(op)
+      {
+        // If a new player was entered, make it the selected player
+        if (nameInput.style.display !== 'none')
+        {
+          const enteredName = nameInput.value.trim();
+
+          if (enteredName)
+          {
+            let option = [...savedNames.options]
+              .find(o => o.value === enteredName);
+
+            if (!option)
+            {
+              option = document.createElement('option');
+              option.value = enteredName;
+              option.textContent = enteredName;
+              savedNames.appendChild(option);
+            }
+
+            savedNames.value = enteredName;
+            nameInput.value = enteredName;
+            nameInput.style.display = 'none';
+          }
+        }
+
+        clearInterval(timerInterval);
+        messageEl.textContent = '';
+        answers = [];
+        activeInput = null;
+        currentOp = op;
+        saveSettings();
+
+        const max = Math.max(2, Math.min(20, parseInt(maxNumInput.value) || 12));
+        const uniqueProblems = generateUniqueProblems(max, op);
+
+        actualTotal = uniqueProblems.length;
+        problemCountEl.textContent = `Problems: ${actualTotal}` + (actualTotal < TARGET_TOTAL ? ` (only ${actualTotal} unique with max ${max})` : '');
+
+        tbody.innerHTML = '';
+        uniqueProblems.forEach((prob, idx) =>
+        {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${idx + 1}</td>
+            <td class="problem">${prob.display}</td>
+            <td>
+              <input type="text" inputmode="numeric" pattern="[0-9]*" class="answer" readonly>
+              <span class="emoji"></span>
+            </td>
+          `;
+          tbody.appendChild(tr);
+          answers.push(prob.answer);
+        });
+
+        keypad.classList.add('active');
+        startTime = performance.now();
+        timerInterval = setInterval(updateTimer, 100);
+        updateTimer();
+
+        setButtonsEnabled(false, true);
+        doneBtnBottom.textContent = 'Quit';
+        enterLockMode();
+
+        const firstInput = document.querySelector('input.answer');
+        if (firstInput)
+        {
+          firstInput.focus();
+          activeInput = firstInput;
+          highlightRow(firstInput);
+        }
+      }
+
+      function updateTimer()
+      {
+        if (!startTime) return;
+        const elapsed = (performance.now() - startTime) / 1000;
+        timerEl.textContent = `Time: ${formatTime(elapsed)}`;
+      }
+
+      function getEmptyAnswerCount()
+      {
+        return Array.from(document.querySelectorAll('input.answer'))
+          .filter(input => input.value.trim() === '')
+          .length;
+      }
+
+      function updateDoneButtonText()
+      {
+        const c = getEmptyAnswerCount();
+        doneBtnBottom.textContent = c > 0 ? 'Quit' : 'Done';
+      }
+
+      function processAnswerKey(key)
+      {
+        if (!activeInput || activeInput.disabled) return;
+
+        if (/^\d$/.test(key))
+        {
+          activeInput.value += key;
+        }
+        else if (key === 'Backspace')
+        {
+          activeInput.value = activeInput.value.slice(0, -1);
+        }
+        else if (key === 'Enter')
+        {
+          advanceToNextEmpty();
+        }
+        else if (key === 'Escape')
+        {
+          doneBtnBottom.click();
+        }
+
+        updateDoneButtonText();
+      }
+
+      function finishQuiz()
+      {
+        clearInterval(timerInterval);
+        keypad.classList.remove('active');
+        exitLockMode();
+
+        const totalSeconds = (performance.now() - startTime) / 1000;
+        const avgSeconds = totalSeconds / actualTotal || 1;
+        const timeStr = formatTime(totalSeconds);
+        timerEl.textContent = `Time: ${timeStr}`;
+
+        let correctCount = 0;
+        const rows = tbody.querySelectorAll('tr');
+
+        rows.forEach((row, idx) =>
+        {
+          const input = row.querySelector('input.answer');
+          const emojiSpan = row.querySelector('.emoji');
+          const userVal = input.value.trim();
+          const correct = answers[idx];
+
+          input.disabled = true;
+          row.classList.remove('focused-row');
+
+          if (userVal !== '' && Number(userVal) === correct)
+          {
+            input.classList.add('correct');
+            emojiSpan.textContent = '✅';
+            correctCount++;
+          }
+          else
+          {
+            input.classList.add('incorrect');
+            emojiSpan.textContent = `❌ ${correct}`;
+          }
+        });
+
+        const percentage = Math.round((correctCount / actualTotal) * 100);
+        const childName = nameInput.value.trim() || "Student";
+        const speed = getSpeedRating(avgSeconds);
+        const accuracy = getAccuracyRating(percentage);
+
+        messageEl.innerHTML = `
+          <div><strong>${childName}</strong>'s Results</div>
+          <div>Score: <strong>${correctCount}/${actualTotal} (${percentage}%)</strong> ${accuracy.emoji}</div>
+          <div>Total time: <strong>${timeStr}</strong></div>
+          <div>Average time: <strong>${avgSeconds.toFixed(3)} seconds</strong> per problem ${speed.emoji}</div>
+          <div class="rating">Speed: ${speed.emoji} ${speed.text}</div>
+          <div class="rating">Accuracy: ${accuracy.emoji} ${accuracy.text}</div>
+        `;
+
+        if (getEmptyAnswerCount() == 0)
+        {
+          history.push(
+          {
+            name: childName,
+            type: `${currentOp} ${maxNumInput.value}`,
+            percentage,
+            scoreEmoji: accuracy.emoji,
+            avg: avgSeconds,
+            timeEmoji: speed.emoji
+          });
+        }
+
+        saveHistory();
+        renderHistory();
+        setButtonsEnabled(true, false);
+      }
+
+      window.addEventListener('popstate', () =>
+      {
+        if (quizActive)
+        {
+          history.pushState({ quiz: true }, '');
+          alert('Finish the quiz first!');
+        }
       });
-    });
-  } else {
-    finishQuiz();
-  }
-}
 
-
-async function enterLockMode() {
-  quizActive = true;
-  history.pushState({ quiz: true }, '');
-  try {
-    if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
-    else if (document.documentElement.webkitRequestFullscreen) await document.documentElement.webkitRequestFullscreen();
-  } catch (e) {}
-  try {
-    if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
-  } catch (e) {}
-}
-
-function exitLockMode() {
-  quizActive = false;
-  if (document.fullscreenElement || document.webkitFullscreenElement) {
-    if (document.exitFullscreen) document.exitFullscreen();
-    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-  }
-  if (wakeLock) { wakeLock.release(); wakeLock = null; }
-}
-
-function startQuiz(op) {
-
-
-// If a new player was entered, make it the selected player
-if (nameInput.style.display !== 'none') {
-  const enteredName = nameInput.value.trim();
-
-  if (enteredName) {
-    let option = [...savedNames.options]
-      .find(o => o.value === enteredName);
-
-    if (!option) {
-      option = document.createElement('option');
-      option.value = enteredName;
-      option.textContent = enteredName;
-      savedNames.appendChild(option);
-    }
-
-    savedNames.value = enteredName;
-    nameInput.value = enteredName;
-    nameInput.style.display = 'none';
-  }
-}
-
-
-  
-  clearInterval(timerInterval);
-  messageEl.textContent = '';
-  answers = [];
-  activeInput = null;
-  currentOp = op;
-  saveSettings();
-
-  const max = Math.max(2, Math.min(20, parseInt(maxNumInput.value) || 12));
-  const uniqueProblems = generateUniqueProblems(max, op);
-
-  actualTotal = uniqueProblems.length;
-  problemCountEl.textContent = `Problems: ${actualTotal}` + (actualTotal < TARGET_TOTAL ? ` (only ${actualTotal} unique with max ${max})` : '');
-
-  tbody.innerHTML = '';
-  uniqueProblems.forEach((prob, idx) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${idx + 1}</td>
-      <td class="problem">${prob.display}</td>
-      <td>
-        <input type="text" inputmode="numeric" pattern="[0-9]*" class="answer" readonly>
-        <span class="emoji"></span>
-      </td>
-    `;
-    tbody.appendChild(tr);
-    answers.push(prob.answer);
-  });
-
-  keypad.classList.add('active');
-  startTime = performance.now();
-  timerInterval = setInterval(updateTimer, 100);
-  updateTimer();
-
-  setButtonsEnabled(false, true);
-  doneBtnBottom.textContent = 'Quit';
-  enterLockMode();
-
-  const firstInput = document.querySelector('input.answer');
-  if (firstInput) {
-    firstInput.focus();
-    activeInput = firstInput;
-    highlightRow(firstInput);
-  }
-}
-
-function updateTimer() {
-  if (!startTime) return;
-  const elapsed = (performance.now() - startTime) / 1000;
-  timerEl.textContent = `Time: ${formatTime(elapsed)}`;
-}
-
-function getEmptyAnswerCount() {
-  return Array.from(document.querySelectorAll('input.answer'))
-    .filter(input => input.value.trim() === '')
-    .length;
-}
-
-
-function updateDoneButtonText() {
-  const c = getEmptyAnswerCount();
-
-  //messageEl.textContent = `Empty answers: ${c}`;
-
-  doneBtnBottom.textContent =
-    c > 0 ? 'Quit' : 'Done';nn
-}
-
-
-function processAnswerKey(key) {
-  if (!activeInput || activeInput.disabled) return;
-
-  if (/^\d$/.test(key)) {
-    activeInput.value += key;
-  } else if (key === 'Backspace') {
-    activeInput.value = activeInput.value.slice(0, -1);
-  } else if (key === 'Enter') {
-    advanceToNextEmpty();
-  } else if (key === 'Escape') {
-    doneBtnBottom.click();
-  }
-
-  updateDoneButtonText();
-}
-
-
-  
-function finishQuiz() {
-  clearInterval(timerInterval);
-  keypad.classList.remove('active');
-  exitLockMode();
-
-  const totalSeconds = (performance.now() - startTime) / 1000;
-  const avgSeconds = totalSeconds / actualTotal || 1;
-  const timeStr = formatTime(totalSeconds);
-  timerEl.textContent = `Time: ${timeStr}`;
-
-  let correctCount = 0;
-  const rows = tbody.querySelectorAll('tr');
-
-  rows.forEach((row, idx) => {
-    const input = row.querySelector('input.answer');
-    const emojiSpan = row.querySelector('.emoji');
-    const userVal = input.value.trim();
-    const correct = answers[idx];
-
-    input.disabled = true;
-    row.classList.remove('focused-row');
-
-    if (userVal !== '' && Number(userVal) === correct) {
-      input.classList.add('correct');
-      emojiSpan.textContent = '✅';
-      correctCount++;
-    } else {
-      input.classList.add('incorrect');
-      emojiSpan.textContent = `❌ ${correct}`;
-    }
-  });
-
-  const percentage = Math.round((correctCount / actualTotal) * 100);
-  const childName = nameInput.value.trim() || "Student";
-  const speed = getSpeedRating(avgSeconds);
-  const accuracy = getAccuracyRating(percentage);
-
-  messageEl.innerHTML = `
-    <div><strong>${childName}</strong>'s Results</div>
-    <div>Score: <strong>${correctCount}/${actualTotal} (${percentage}%)</strong> ${accuracy.emoji}</div>
-    <div>Total time: <strong>${timeStr}</strong></div>
-    <div>Average time: <strong>${avgSeconds.toFixed(3)} seconds</strong> per problem ${speed.emoji}</div>
-    <div class="rating">Speed: ${speed.emoji} ${speed.text}</div>
-    <div class="rating">Accuracy: ${accuracy.emoji} ${accuracy.text}</div>
-  `;
-
-if (getEmptyAnswerCount() == 0)
-
-  history.push({
-    name: childName,
-    type: `${currentOp} ${maxNumInput.value}`,
-    percentage,
-    scoreEmoji: accuracy.emoji,
-    avg: avgSeconds,
-    timeEmoji: speed.emoji
-  });
-
-  saveHistory();
-  renderHistory();
-  setButtonsEnabled(true, false);
-}
-
-window.addEventListener('popstate', () => {
-  if (quizActive) {
-    history.pushState({ quiz: true }, '');
-    alert('Finish the quiz first!');
-  }
-});
-
-tbody.addEventListener('focusin', (e) => {
-  if (e.target.classList.contains('answer') && !e.target.disabled) {
-    activeInput = e.target;
-    e.target.value = '';
-    highlightRow(e.target);
-  }
-});
-
-keypad.addEventListener('click', (e) => {
-  const key = e.target.closest('.key');
-  if (!key) return;
-
-  if (key.id === 'backspaceKey') {
-    processAnswerKey('Backspace');
-  } else if (key.id === 'enterKey') {
-    processAnswerKey('Enter');
-  } else if (key.dataset.digit) {
-    processAnswerKey(key.dataset.digit);
-  }
-});
-
-document.querySelectorAll('.op-btn').forEach(btn => {
-  btn.addEventListener('click', () => startQuiz(btn.dataset.op));
-});
-
-
-savedNames.addEventListener('change', () => {
-  if (savedNames.value === '') {
-    nameInput.style.display = '';
-    nameInput.value = '';
-    nameInput.focus();
-  } else {
-    nameInput.value = savedNames.value;
-    nameInput.style.display = 'none';
-  }
-});
-
-
-
-  
-
-
-document.addEventListener('keydown', (e) => {
-
-  // Quiz in progress
-  if (quizActive) {
-    if (
-      e.target === nameInput ||
-      e.target === maxNumInput
-    ) {
-      return;
-    }
-
-    if (
-      /^\d$/.test(e.key) ||
-      e.key === 'Backspace' ||
-      e.key === 'Enter' ||
-      e.key === 'Escape'
-    ) {
-      e.preventDefault();
-      processAnswerKey(e.key);
-    }
-
-    return;
-  }
-
-  // No quiz active - allow keyboard shortcuts to start quizzes
-  switch (e.key) {
-    case '+':
-      e.preventDefault();
-      startQuiz('+');
-      break;
-
-    case '-':
-      e.preventDefault();
-      startQuiz('−');
-      break;
-
-    case '*':
-    case 'x':
-    case 'X':
-      e.preventDefault();
-      startQuiz('×');
-      break;
-
-    case '/':
-      e.preventDefault();
-      startQuiz('÷');
-      break;
-  }
-});
-
-
-  
-nameInput.addEventListener('change', saveSettings);
-maxNumInput.addEventListener('change', saveSettings);
-
-loadHistory();
-loadSettings();
-
-renderHistory();
-
-
-//nameInput.focus();
-
-  
-doneBtnBottom.addEventListener('click', finishQuiz);
-</script>
-  </div></body>
+      tbody.addEventListener('focusin', (e) =>
+      {
+        if (e.target.classList.contains('answer') && !e.target.disabled)
+        {
+          activeInput = e.target;
+          e.target.value = '';
+          highlightRow(e.target);
+        }
+      });
+
+      keypad.addEventListener('click', (e) =>
+      {
+        const key = e.target.closest('.key');
+        if (!key) return;
+
+        if (key.id === 'backspaceKey')
+        {
+          processAnswerKey('Backspace');
+        }
+        else if (key.id === 'enterKey')
+        {
+          processAnswerKey('Enter');
+        }
+        else if (key.dataset.digit)
+        {
+          processAnswerKey(key.dataset.digit);
+        }
+      });
+
+      document.querySelectorAll('.op-btn').forEach(btn =>
+      {
+        btn.addEventListener('click', () => startQuiz(btn.dataset.op));
+      });
+
+      savedNames.addEventListener('change', () =>
+      {
+        if (savedNames.value === '')
+        {
+          nameInput.style.display = '';
+          nameInput.value = '';
+          nameInput.focus();
+        }
+        else
+        {
+          nameInput.value = savedNames.value;
+          nameInput.style.display = 'none';
+        }
+      });
+
+      document.addEventListener('keydown', (e) =>
+      {
+        // Quiz in progress
+        if (quizActive)
+        {
+          if (
+            e.target === nameInput ||
+            e.target === maxNumInput
+          )
+          {
+            return;
+          }
+
+          if (
+            /^\d$/.test(e.key) ||
+            e.key === 'Backspace' ||
+            e.key === 'Enter' ||
+            e.key === 'Escape'
+          )
+          {
+            e.preventDefault();
+            processAnswerKey(e.key);
+          }
+
+          return;
+        }
+
+        // No quiz active - allow keyboard shortcuts to start quizzes
+        switch (e.key)
+        {
+          case '+':
+            e.preventDefault();
+            startQuiz('+');
+            break;
+
+          case '-':
+            e.preventDefault();
+            startQuiz('−');
+            break;
+
+          case '*':
+          case 'x':
+          case 'X':
+            e.preventDefault();
+            startQuiz('×');
+            break;
+
+          case '/':
+            e.preventDefault();
+            startQuiz('÷');
+            break;
+        }
+      });
+
+      nameInput.addEventListener('change', saveSettings);
+      maxNumInput.addEventListener('change', saveSettings);
+
+      loadHistory();
+      loadSettings();
+      renderHistory();
+
+      doneBtnBottom.addEventListener('click', finishQuiz);
+    </script>
+  </div>
+</body>
 </html>
